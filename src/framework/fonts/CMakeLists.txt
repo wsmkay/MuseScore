@@ -31,6 +31,7 @@ set(MODULE_BIG_QRC
     fonts_FreeSans.qrc
     fonts_FreeSerif.qrc
     fonts_Gootville.qrc
+    fonts_Jianpu.qrc
     fonts_Leland.qrc
     fonts_MScore.qrc
     fonts_MuseJazz.qrc

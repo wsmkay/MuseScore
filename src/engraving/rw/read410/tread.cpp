@@ -3686,6 +3686,14 @@ void TRead::read(StaffType* t, XmlReader& e, ReadContext&)
             e.unknown();
         }
     }
+
+    if (t->xmlName() == "stdJianpu") {
+        t->setGenClef(false);
+        t->setLines(false);
+        t->setLineDistance(Spatium(false));
+        t->setShowLedgerLines(false);
+        t->setStepOffset(false);
+    }
 }
 
 void TRead::read(StaffTypeChange* c, XmlReader& e, ReadContext& ctx)

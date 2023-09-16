@@ -104,6 +104,11 @@ staff_idx_t Staff::idx() const
 
 void Staff::triggerLayout() const
 {
+    if ((staffType() && staffType()->xmlName() == "stdJianpu")
+        && staffType() && staffType()->lines() == 0) {
+        score()->style().set(Sid::MusicalSymbolFont, String(u"jianpu"));
+    }
+
     score()->setLayoutAll(idx());
 }
 

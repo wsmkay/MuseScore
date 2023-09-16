@@ -3549,6 +3549,26 @@ static void layoutKeySig(const KeySig* item, const LayoutContext& ctx, KeySig::L
     }
 
     // compute bbox
+    if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
+        && (item->staffType() && item->staffType()->lines() == 0)) {
+        double symWidth = item->symWidth(SymId::keysig_1_Jianpu);
+        double x = symWidth * 3.5;
+
+        if (t1 == 0) {
+            KeySym ks;
+            ks.sym = SymId::accidentalNatural;
+            ks.xPos = 0;
+            ldata->keySymbols.push_back(ks);
+        }
+
+        if (!ldata->keySymbols.empty()) {
+            const KeySym& ks = ldata->keySymbols.back();
+            ldata->addBbox(item->symBbox(ks.sym).translated(x, 0));
+        }
+
+        return;
+    }
+
     for (const KeySym& ks : ldata->keySymbols) {
         double x = ks.xPos * _spatium;
         double y = ks.line * step;
@@ -4183,6 +4203,19 @@ static void layoutRestDots(const Rest* item, const LayoutContext& ctx, Rest::Lay
     double x = item->symWidthNoLedgerLines(ldata) + ctx.conf().styleMM(Sid::dotNoteDistance) * item->mag();
     double dx = ctx.conf().styleMM(Sid::dotDotDistance) * item->mag();
     double y = item->dotLine() * item->spatium() * .5;
+
+    if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
+        && (item->staffType() && item->staffType()->lines() == 0)) {
+        double symHeight   = item->symHeight(SymId::keysig_1_Jianpu);
+        for (NoteDot* dot : item->dotList()) {
+            NoteDot::LayoutData* dotldata = dot->mutLayoutData();
+            layoutNoteDot(dot, ctx, dotldata);
+            dotldata->setPos(x, symHeight / 5.2);
+            x += dx;
+        }
+        return;
+    }
+
     for (NoteDot* dot : item->dotList()) {
         NoteDot::LayoutData* dotldata = dot->mutLayoutData();
         layoutNoteDot(dot, ctx, dotldata);
@@ -4198,6 +4231,14 @@ static void layoutRest(const Rest* item, const LayoutContext& ctx, Rest::LayoutD
         return;
     }
     ldata->setIsSkipDraw(false);
+
+    if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
+        && (item->staffType() && item->staffType()->lines() == 0)) {
+        ldata->setPos(0.0, 0.0);
+        ldata->setBbox(item->symBbox(ldata->sym));
+        layoutRestDots(item, ctx, ldata);
+        return;
+    }
 
     double _spatium = item->spatium();
 
@@ -4640,6 +4681,11 @@ static void layoutStem(const Stem* item, const LayoutContext& ctx, Stem::LayoutD
 
 void TLayout::layout(Stem* item, LayoutContext& ctx)
 {
+    if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
+        && (item->staffType() && item->staffType()->lines() == 0)) {
+        return;
+    }
+
     layoutStem(item, ctx, item->mutLayoutData());
 }
 
@@ -4713,6 +4759,11 @@ static void layoutStemSlash(const StemSlash* item, const LayoutContext& ctx, Ste
 
 void TLayout::layout(StemSlash* item, LayoutContext& ctx)
 {
+    if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
+        && (item->staffType() && item->staffType()->lines() == 0)) {
+        return;
+    }
+
     layoutStemSlash(item, ctx, item->mutLayoutData());
 }
 
