@@ -45,10 +45,6 @@ void Autoplace::autoplaceSegmentElement(const EngravingItem* item, EngravingItem
         Segment* s = toSegment(item->explicitParent());
         Measure* m = s->measure();
 
-        LD_CONDITION(ldata->isSetPos());
-        LD_CONDITION(m->layoutData()->isSetPos());
-        LD_CONDITION(s->layoutData()->isSetPos());
-
         double sp = item->style().spatium();
         staff_idx_t si = item->staffIdxOrNextVisible();
 
@@ -231,8 +227,6 @@ void Autoplace::autoplaceSpannerSegment(const SpannerSegment* item, EngravingIte
 
 double Autoplace::rebaseOffset(const EngravingItem* item, EngravingItem::LayoutData* ldata, bool nox)
 {
-    LD_CONDITION(ldata->isSetPos());
-
     PointF off = item->offset();
     PointF p = ldata->autoplace.changedPos - item->pos();
     if (nox) {

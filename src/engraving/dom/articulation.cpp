@@ -61,6 +61,7 @@ Articulation::Articulation(ChordRest* parent, ElementType type)
     m_symId         = SymId::noSym;
     m_anchor        = ArticulationAnchor::AUTO;
     m_direction     = DirectionV::AUTO;
+    m_up            = true;
     m_ornamentStyle = OrnamentStyle::DEFAULT;
     m_playArticulation = true;
 
@@ -115,16 +116,7 @@ int Articulation::subtype() const
 
 void Articulation::setUp(bool val)
 {
-    Articulation::LayoutData* ldata = mutLayoutData();
-    ldata->setUp(val);
-
-    //! NOTE member of Articulation m_symId - this is `given` data
-    //! member of LayoutData m_symId - this is layout data
-    //! I would not like to change the `given` data here, but they are changing for backward compatibility
-    //! Even better, I wouldn’t want symId to be `given` data,
-    //! it would be better if there was some type,
-    //! and from it we would already figure out how (with what symbol) to display it
-
+    m_up = val;
     bool dup = m_direction == DirectionV::AUTO ? val : m_direction == DirectionV::UP;
     String s = String::fromAscii(SymNames::nameForSymId(m_symId).ascii());
     if (s.endsWith(!dup ? u"Above" : u"Below")) {
@@ -140,8 +132,6 @@ void Articulation::setUp(bool val)
             m_symId = sym;
         }
     }
-
-    ldata->setSymId(m_symId);
 }
 
 //---------------------------------------------------------

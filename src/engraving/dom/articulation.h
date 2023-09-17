@@ -136,6 +136,8 @@ public:
     void resetProperty(Pid id) override;
     Sid getPropertyStyle(Pid id) const override;
 
+    bool up() const { return m_up; }
+    void setUp(bool val);
     void setDirection(DirectionV d) { m_direction = d; }
     DirectionV direction() const { return m_direction; }
 
@@ -174,35 +176,6 @@ public:
 
     staff_idx_t vStaffIdx() const override { return chordRest()->vStaffIdx(); }
 
-    struct LayoutData : public EngravingItem::LayoutData
-    {
-        void reset() override
-        {
-            EngravingItem::LayoutData::reset();
-            m_up.reset();
-            m_symId.reset();
-        }
-
-        bool isSetUp() const { return m_up.has_value(); }
-        bool up(LD_ACCESS mode = LD_ACCESS::CHECK) const { return m_up.value(mode); }
-        void setUp(bool val) { m_up.set_value(val); }
-
-        bool isSetSymId() const { return m_symId.has_value(); }
-        SymId symId(LD_ACCESS mode = LD_ACCESS::CHECK) const { return m_symId.value(mode); }
-        void setSymId(SymId val) { m_symId.set_value(val); }
-
-    private:
-        ld_field<bool> m_up = { "up", true };
-        ld_field<SymId> m_symId = { "symId", SymId::noSym };
-    };
-    DECLARE_LAYOUTDATA_METHODS(Articulation);
-
-    void setUp(bool val);
-
-    //! --- DEPRECATED ---
-    bool up() const { return layoutData()->up(); }
-    //! ------------------
-
 protected:
     friend class mu::engraving::Factory;
     Articulation(ChordRest* parent, ElementType type = ElementType::ARTICULATION);
@@ -231,6 +204,7 @@ private:
 
     ArticulationAnchor m_anchor = ArticulationAnchor::AUTO;
 
+    bool m_up = true;
     OrnamentStyle m_ornamentStyle = OrnamentStyle::DEFAULT;       // for use in ornaments such as trill
     bool m_playArticulation = true;
 

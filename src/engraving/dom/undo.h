@@ -1425,13 +1425,12 @@ class ChangeDrumset : public UndoCommand
 
     Instrument* instrument = nullptr;
     Drumset drumset;
-    Part* part = nullptr;
 
     void flip(EditData*) override;
 
 public:
-    ChangeDrumset(Instrument* i, const Drumset* d, Part* p)
-        : instrument(i), drumset(*d), part(p) {}
+    ChangeDrumset(Instrument* i, const Drumset* d)
+        : instrument(i), drumset(*d) {}
 
     UNDO_TYPE(CommandType::ChangeDrumset)
     UNDO_NAME("ChangeDrumset")

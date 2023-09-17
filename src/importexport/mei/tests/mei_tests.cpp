@@ -40,18 +40,14 @@ using namespace mu::engraving;
 
 static const String MEI_DIR(u"data/");
 
-////////////////////////////////////////////////////////////////
-// Set to true to re-generate the MuseScore reference test files
-#define BUILD_MSCORE_REF_FILE false
-////////////////////////////////////////////////////////////////
-
 namespace mu::iex::mei {
 class Mei_Tests : public ::testing::Test
 {
 public:
     void meiReadTest(const char* file);
 
-    inline static bool s_generateReferenceFile = BUILD_MSCORE_REF_FILE;
+    // Change this to true to re-generate reference files
+    inline static bool s_generateReferenceFile = false;
 };
 
 void Mei_Tests::meiReadTest(const char* file)
@@ -127,10 +123,6 @@ TEST_F(Mei_Tests, mei_clef_01) {
     meiReadTest("clef-01");
 }
 
-TEST_F(Mei_Tests, mei_color_01) {
-    meiReadTest("color-01");
-}
-
 TEST_F(Mei_Tests, mei_cross_staff_01) {
     meiReadTest("cross-staff-01");
 }
@@ -199,16 +191,8 @@ TEST_F(Mei_Tests, mei_metadata_01) {
     meiReadTest("metadata-01");
 }
 
-TEST_F(Mei_Tests, mei_mordent_01) {
-    meiReadTest("mordent-01");
-}
-
 TEST_F(Mei_Tests, mei_octave_01) {
     meiReadTest("octave-01");
-}
-
-TEST_F(Mei_Tests, mei_ornam_01) {
-    meiReadTest("ornam-01");
 }
 
 TEST_F(Mei_Tests, mei_page_head_01) {

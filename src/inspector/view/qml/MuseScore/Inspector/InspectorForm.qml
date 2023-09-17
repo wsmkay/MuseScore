@@ -136,7 +136,7 @@ Rectangle {
                             flickableArea.ensureContentVisible(invisibleContentHeight)
                         }
 
-                        onPopupOpened: {
+                        onPopupOpened: function(openedPopup, visualControl) {
                             prv.closePreviousOpenedPopup(openedPopup, visualControl)
                         }
                     }

@@ -23,7 +23,7 @@
 #ifndef MU_GLOBAL_DLIB_H
 #define MU_GLOBAL_DLIB_H
 
-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
+#ifdef Q_OS_WIN
 #include <windows.h>
 #else
 #include <dlfcn.h>
@@ -34,7 +34,7 @@
 namespace mu {
 inline void* loadLib(const io::path_t& path)
 {
-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
+#ifdef Q_OS_WIN
     return LoadLibrary(path.toStdWString().c_str());
 #else
     return dlopen(path.c_str(), RTLD_LAZY);
@@ -43,7 +43,7 @@ inline void* loadLib(const io::path_t& path)
 
 inline void* getLibFunc(void* libHandle, const char* funcName)
 {
-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
+#ifdef Q_OS_WIN
     return GetProcAddress((HINSTANCE)libHandle, funcName);
 #else
     return dlsym(libHandle, funcName);
@@ -52,7 +52,7 @@ inline void* getLibFunc(void* libHandle, const char* funcName)
 
 inline void closeLib(void* libHandle)
 {
-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
+#ifdef Q_OS_WIN
     UNUSED(libHandle);
     return;
 #else

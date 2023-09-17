@@ -78,7 +78,7 @@ public:
 
     ~MeasureBase();
 
-    System* system() const { return toSystem(explicitParent()); }
+    System* system() const { return (System*)explicitParent(); }
     void setParent(System* s) { EngravingItem::setParent((EngravingObject*)(s)); }
 
     // Score Tree functions
@@ -117,8 +117,8 @@ public:
 
     virtual void moveTicks(const Fraction& diff) { setTick(tick() + diff); }
 
-    void add(EngravingItem*) override;
-    void remove(EngravingItem*) override;
+    virtual void add(EngravingItem*) override;
+    virtual void remove(EngravingItem*) override;
 
     Fraction tick() const override;
     void setTick(const Fraction& f);

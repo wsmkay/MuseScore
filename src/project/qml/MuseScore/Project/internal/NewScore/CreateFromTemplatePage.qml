@@ -35,8 +35,6 @@ Item {
 
     property NavigationSection navigationSection: null
 
-    property alias navigation: templatesView.navigationPanel
-
     signal done
 
     TemplatesModel {

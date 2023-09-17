@@ -33,31 +33,7 @@
 
 using namespace mu::shortcuts;
 
-static UCKeyboardLayout* keyboardLayout()
-{
-    static TISInputSourceRef (* TISCopyCurrentKeyboardLayoutInputSource)(void);
-    static void*(* TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey);
-
-    CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
-
-    if (bundle) {
-        *(void**)& TISGetInputSourceProperty = CFBundleGetFunctionPointerForName(bundle, CFSTR("TISGetInputSourceProperty"));
-        *(void**)& TISCopyCurrentKeyboardLayoutInputSource
-            = CFBundleGetFunctionPointerForName(bundle, CFSTR("TISCopyCurrentKeyboardLayoutInputSource"));
-    }
-
-    if (!TISCopyCurrentKeyboardLayoutInputSource || !TISGetInputSourceProperty) {
-        LOGE() << "Error getting functions from Carbon framework";
-        return 0;
-    }
-
-    TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardLayoutInputSource();
-    CFDataRef uchr = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, CFSTR("TISPropertyUnicodeKeyLayoutData"));
-
-    return (UCKeyboardLayout*)CFDataGetBytePtr(uchr);
-}
-
-static quint32 nativeKeycode(UCKeyboardLayout* keyboard, Qt::Key keyCode)
+quint32 nativeKeycode(Qt::Key keyCode)
 {
     switch (keyCode) {
     case Qt::Key_Return:
@@ -145,10 +121,36 @@ static quint32 nativeKeycode(UCKeyboardLayout* keyboard, Qt::Key keyCode)
     }
 
     UTF16Char keyCodeChar = keyCode;
-    UCKeyboardTypeHeader* table = keyboard->keyboardTypeList;
 
-    uint8_t* data = (uint8_t*)keyboard;
-    for (quint32 i = 0; i < keyboard->keyboardTypeCount; i++) {
+    static TISInputSourceRef (* TISCopyCurrentKeyboardLayoutInputSource)(void);
+    static void*(* TISGetInputSourceProperty)(TISInputSourceRef inputSource, CFStringRef propertyKey);
+
+    CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.Carbon"));
+
+    if (bundle) {
+        *(void**)& TISGetInputSourceProperty = CFBundleGetFunctionPointerForName(bundle, CFSTR("TISGetInputSourceProperty"));
+        *(void**)& TISCopyCurrentKeyboardLayoutInputSource
+            = CFBundleGetFunctionPointerForName(bundle, CFSTR("TISCopyCurrentKeyboardLayoutInputSource"));
+    }
+
+    if (!TISCopyCurrentKeyboardLayoutInputSource || !TISGetInputSourceProperty) {
+        LOGE() << "Error getting functions from Carbon framework";
+        return 0;
+    }
+
+    TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardLayoutInputSource();
+    CFDataRef uchr = (CFDataRef)TISGetInputSourceProperty(currentKeyboard, CFSTR("TISPropertyUnicodeKeyLayoutData"));
+    UCKeyboardLayout* keyboardLayout = (UCKeyboardLayout*)CFDataGetBytePtr(uchr);
+
+    if (!keyboardLayout) {
+        LOGE() << "The keyboard layout is not valid";
+        return 0;
+    }
+
+    UCKeyboardTypeHeader* table = keyboardLayout->keyboardTypeList;
+
+    uint8_t* data = (uint8_t*)keyboardLayout;
+    for (quint32 i = 0; i < keyboardLayout->keyboardTypeCount; i++) {
         UCKeyStateRecordsIndex* stateRec = 0;
         if (table[i].keyStateRecordsIndexOffset != 0) {
             stateRec = reinterpret_cast<UCKeyStateRecordsIndex*>(data + table[i].keyStateRecordsIndexOffset);
@@ -185,7 +187,7 @@ static quint32 nativeKeycode(UCKeyboardLayout* keyboard, Qt::Key keyCode)
     return 0;
 }
 
-quint32 nativeModifiers(UCKeyboardLayout* keyboard, int key, Qt::KeyboardModifiers modifiers, quint32 keyNativeCode)
+quint32 nativeModifiers(Qt::KeyboardModifiers modifiers)
 {
     quint32 result = 0;
     if (modifiers & Qt::ShiftModifier) {
@@ -204,102 +206,43 @@ quint32 nativeModifiers(UCKeyboardLayout* keyboard, int key, Qt::KeyboardModifie
         result |= kEventKeyModifierNumLockMask;
     }
 
-    if (result == 0) {
-        //! NOTE: Some symbols are available only through modifiers;
-        //! if modifiers are not explicitly specified,
-        //! we will get them through the native key
-
-        //!NOTE: The algorithm below does not work correctly for this key
-        if (key == Qt::Key_Plus) {
-            return result;
-        }
-
-        UTF16Char keyCodeChar = key;
-
-        int alt = (optionKey >> 8) & 0xff;
-        UInt32 deadKeyState = 0;
-        UniCharCount count;
-        UniChar character;
-
-        if (UCKeyTranslate(keyboard, keyNativeCode, kUCKeyActionDown, alt, 0, 0,
-                           &deadKeyState, 1, &count, &character) == 0 && character == keyCodeChar) {
-            result = optionKey;
-        }
-    }
-
     return result;
 }
 
-Qt::KeyboardModifiers qtModifiers(int keys)
+QSet<QKeyCombination> possibleKeys(const QKeySequence& sequence)
 {
-    static QMap<int, Qt::KeyboardModifier> qtModifiers = {
-        { shiftKey, Qt::ShiftModifier },
-        { rightShiftKey, Qt::ShiftModifier },
-        { controlKey, Qt::MetaModifier },
-        { rightControlKey, Qt::MetaModifier },
-        { cmdKey, Qt::ControlModifier },
-        { optionKey, Qt::AltModifier },
-        { rightOptionKey, Qt::AltModifier },
-        { kEventKeyModifierNumLockMask, Qt::KeypadModifier },
-        { 0, Qt::NoModifier }
-    };
+    const QKeyCombination keyCombination = sequence[0];
 
-    Qt::KeyboardModifiers result = Qt::NoModifier;
-    QMapIterator<int, Qt::KeyboardModifier> it(qtModifiers);
-    while (it.hasNext()) {
-        it.next();
-
-        if (keys & it.key()) {
-            result |= it.value();
-        }
-    }
-
-    return result;
-}
-
-QSet<int> possibleKeys(const QKeySequence& sequence)
-{
-    const int key = sequence[0];
-
-    Qt::Key qKey = Qt::Key(key & ~Qt::KeyboardModifierMask);
+    const Qt::Key qKey = keyCombination.key();
     if (qKey == Qt::Key_Insert) {
-        return { key };
+        return { keyCombination };
     }
 
-    UCKeyboardLayout* keyboard = keyboardLayout();
-    if (!keyboard) {
-        LOGE() << "The keyboard layout is not valid";
-        return {};
-    }
+    const Qt::KeyboardModifiers modifiers = keyCombination.keyboardModifiers();
 
-    Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(key & Qt::KeyboardModifierMask);
+    quint32 keyNativeCode = nativeKeycode(keyCombination.key());
+    quint32 keyNativeModifiers = nativeModifiers(modifiers);
 
-    quint32 keyNativeCode = nativeKeycode(keyboard, qKey);
-    quint32 keyNativeModifiers = nativeModifiers(keyboard, qKey, modifiers, keyNativeCode);
-
-    //! NOTE: It may be that we resolved modifiers through the native key,
-    //! then we should update the qt modifiers
-    modifiers = qtModifiers(keyNativeModifiers);
-
-    QKeyEvent fakeKey(QKeyEvent::None, key, modifiers, keyNativeCode, keyNativeCode, keyNativeModifiers);
+    QKeyEvent fakeKey(QKeyEvent::None, keyCombination.toCombined(), modifiers, keyNativeCode, keyNativeCode, keyNativeModifiers);
     QList<int> keys = QGuiApplicationPrivate::platformIntegration()->possibleKeys(&fakeKey);
 
-    QList<int> result;
+    QSet<QKeyCombination> result;
     for (int key : keys) {
+        QKeyCombination combination = QKeyCombination::fromCombined(key);
         if (modifiers != Qt::NoModifier) {
-            if (Qt::KeyboardModifiers(key & Qt::KeyboardModifierMask) == Qt::NoModifier) {
-                key += modifiers;
+            if (combination.keyboardModifiers() == Qt::NoModifier) {
+                combination = QKeyCombination(modifiers, combination.key());
             }
 
-            if (Qt::KeyboardModifiers(key & Qt::KeyboardModifierMask) != modifiers) {
+            if (combination.keyboardModifiers() != modifiers) {
                 continue;
             }
         }
 
-        result << key;
+        result << combination;
     }
 
-    return QSet<int>(result.cbegin(), result.cend());
+    return result;
 }
 
 MacOSShortcutsInstanceModel::MacOSShortcutsInstanceModel(QObject* parent)
@@ -321,8 +264,8 @@ void MacOSShortcutsInstanceModel::doLoadShortcuts()
         for (const std::string& seq : sc.sequences) {
             QString sequence = QString::fromStdString(seq);
 
-            QSet<int> keys = possibleKeys(QKeySequence::fromString(sequence, QKeySequence::PortableText));
-            for (int key : keys) {
+            QSet<QKeyCombination> keys = possibleKeys(QKeySequence::fromString(sequence, QKeySequence::PortableText));
+            for (QKeyCombination key : keys) {
                 QKeySequence keySeq(key);
                 QString seqStr = keySeq.toString(QKeySequence::PortableText);
 

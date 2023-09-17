@@ -137,7 +137,7 @@ void Paint::paintScore(draw::Painter* painter, Score* score, const IScoreRendere
             }
 
             std::vector<EngravingItem*> elements = page->items(drawRect.translated(-pagePos));
-            paintItems(*painter, elements);
+            paintItems(*painter, elements, opt.isPrinting);
 
             if (disableClipping) {
                 painter->setClipping(false);
@@ -222,7 +222,7 @@ void Paint::paintItem(mu::draw::Painter& painter, const EngravingItem* item)
     painter.translate(-itemPosition);
 }
 
-void Paint::paintItems(mu::draw::Painter& painter, const std::vector<EngravingItem*>& items)
+void Paint::paintItems(mu::draw::Painter& painter, const std::vector<EngravingItem*>& items, bool isPrinting)
 {
     TRACEFUNC;
     std::vector<EngravingItem*> sortedItems(items.begin(), items.end());
@@ -236,4 +236,12 @@ void Paint::paintItems(mu::draw::Painter& painter, const std::vector<EngravingIt
 
         paintItem(painter, item);
     }
+
+#ifdef MUE_ENABLE_ENGRAVING_PAINT_DEBUGGER
+    if (!isPrinting) {
+        DebugPaint::paintElementsDebug(painter, sortedItems);
+    }
+#else
+    UNUSED(isPrinting);
+#endif
 }

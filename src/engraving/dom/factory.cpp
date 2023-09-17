@@ -97,6 +97,7 @@
 #include "systemtext.h"
 #include "tempotext.h"
 #include "text.h"
+#include "textframe.h"
 #include "textline.h"
 #include "tie.h"
 #include "timesig.h"

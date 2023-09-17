@@ -81,6 +81,7 @@
 #include "../../dom/bend.h"
 #include "../../dom/stretchedbend.h"
 #include "../../dom/box.h"
+#include "../../dom/textframe.h"
 #include "../../dom/layoutbreak.h"
 #include "../../dom/stafftypechange.h"
 #include "../../dom/bracket.h"

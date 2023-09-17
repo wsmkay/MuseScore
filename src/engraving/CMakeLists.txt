@@ -54,7 +54,6 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/smufl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/smufl.h
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/rtti.h
-    ${CMAKE_CURRENT_LIST_DIR}/infrastructure/ld_access.h
 
     ${DOM_SRC}
 
@@ -295,12 +294,6 @@ set(MODULE_LINK
 if (MUE_ENABLE_ENGRAVING_PAINT_DEBUGGER)
     set(MODULE_DEF ${MODULE_DEF} -DMUE_ENABLE_ENGRAVING_PAINT_DEBUGGER)
 endif()
-
-if (MUE_ENABLE_ENGRAVING_LD_ACCESS)
-    set(MODULE_DEF ${MODULE_DEF} -DMUE_ENABLE_ENGRAVING_LD_ACCESS)
-endif()
-
-
 
 set(MODULE_USE_UNITY_NONE ON)
 include(SetupModule)

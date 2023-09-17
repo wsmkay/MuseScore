@@ -25,6 +25,8 @@ import Qt.labs.platform 1.1 as PLATFORM
 import MuseScore.AppShell 1.0
 
 Item {
+    id: root
+
     // Loading subitems on Linux causes crashes when adding menus, but it works without it
     property bool loadSubitems: true
     readonly property bool available: menuModel.isGlobalMenuAvailable()
@@ -111,11 +113,11 @@ Item {
                     var isMenu = Boolean(item.subitems) && item.subitems.length > 0
 
                     if (isMenu) {
-                        var subMenu = makeMenu(item)
+                        var subMenu = root.makeMenu(item)
 
                         addMenu(subMenu)
                     } else {
-                        var menuItem = makeMenuItem(this, item)
+                        var menuItem = root.makeMenuItem(this, item)
 
                         addItem(menuItem)
                     }

@@ -17,12 +17,6 @@ set(RENDERING_DEV_SRC
     ${CMAKE_CURRENT_LIST_DIR}/layoutcontext.h
     ${CMAKE_CURRENT_LIST_DIR}/scorelayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/scorelayout.h
-    ${CMAKE_CURRENT_LIST_DIR}/scorepageviewlayout.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/scorepageviewlayout.h
-    ${CMAKE_CURRENT_LIST_DIR}/scorehorizontalviewlayout.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/scorehorizontalviewlayout.h
-    ${CMAKE_CURRENT_LIST_DIR}/scoreverticalviewlayout.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/scoreverticalviewlayout.h
     ${CMAKE_CURRENT_LIST_DIR}/lyricslayout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lyricslayout.h
     ${CMAKE_CURRENT_LIST_DIR}/measurelayout.cpp
@@ -53,11 +47,4 @@ set(RENDERING_DEV_SRC
     ${CMAKE_CURRENT_LIST_DIR}/horizontalspacing.h
     ${CMAKE_CURRENT_LIST_DIR}/autoplace.cpp
     ${CMAKE_CURRENT_LIST_DIR}/autoplace.h
-
-    ${CMAKE_CURRENT_LIST_DIR}/passbase.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/passbase.h
-    ${CMAKE_CURRENT_LIST_DIR}/passresetlayoutdata.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/passresetlayoutdata.h
-    ${CMAKE_CURRENT_LIST_DIR}/passlayoutindependentitems.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/passlayoutindependentitems.h
 )

@@ -49,7 +49,6 @@
 #include "dom/stafflines.h"
 #include "dom/system.h"
 #include "dom/tie.h"
-#include "dom/timesig.h"
 #include "dom/tremolo.h"
 #include "dom/tuplet.h"
 #include "dom/volta.h"
@@ -305,7 +304,7 @@ System* SystemLayout::collectSystem(LayoutContext& ctx)
 
         const MeasureBase* mb = ctx.state().curMeasure();
         bool lineBreak  = false;
-        switch (ctx.conf().viewMode()) {
+        switch (ctx.conf().layoutMode()) {
         case LayoutMode::PAGE:
         case LayoutMode::SYSTEM:
             lineBreak = mb->pageBreak() || mb->lineBreak() || mb->sectionBreak();
@@ -781,7 +780,7 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
                 ss->skyline().add(m->staffLines(staffIdx)->layoutData()->bbox().translated(m->pos()));
             }
             for (Segment& s : m->segments()) {
-                if (!s.enabled()) {
+                if (!s.enabled() || s.isTimeSigType()) {             // hack: ignore time signatures
                     continue;
                 }
                 PointF p(s.pos() + m->pos());
@@ -791,11 +790,6 @@ void SystemLayout::layoutSystemElements(System* system, LayoutContext& ctx)
                     if (bl && bl->addToSkyline()) {
                         RectF r = TLayout::layoutRect(bl, ctx);
                         skyline.add(r.translated(bl->pos() + p));
-                    }
-                } else if (s.segmentType() & SegmentType::TimeSig) {
-                    TimeSig* ts = toTimeSig(s.element(staffIdx * VOICES));
-                    if (ts && ts->addToSkyline()) {
-                        skyline.add(ts->shape().translate(ts->pos() + p));
                     }
                 } else {
                     track_idx_t strack = staffIdx * VOICES;
@@ -1848,10 +1842,9 @@ double SystemLayout::totalBracketOffset(LayoutContext& ctx)
                 Bracket* dummyBr = Factory::createBracket(ctx.mutDom().dummyParent(), /*isAccessibleEnabled=*/ false);
                 dummyBr->setBracketItem(bi);
                 dummyBr->setStaffSpan(firstStaff, lastStaff);
-                dummyBr->mutLayoutData()->setBracketHeight(3.5 * dummyBr->spatium() * 2); // default
-                TLayout::layout(dummyBr, dummyBr->mutLayoutData(), ctx.conf());
+                TLayout::layout(dummyBr, ctx);
                 for (staff_idx_t stfIdx = firstStaff; stfIdx <= lastStaff; ++stfIdx) {
-                    bracketWidth[stfIdx] += dummyBr->layoutData()->bracketWidth();
+                    bracketWidth[stfIdx] += dummyBr->width();
                 }
                 delete dummyBr;
             }
@@ -1872,7 +1865,16 @@ double SystemLayout::layoutBrackets(System* system, LayoutContext& ctx)
     size_t nstaves = system->staves().size();
     size_t columns = system->getBracketsColumnsCount();
 
-    std::vector<double> bracketWidth(columns, 0.0);
+#if (!defined (_MSCVER) && !defined (_MSC_VER))
+    double bracketWidth[columns];
+#else
+    // MSVC does not support VLA. Replace with std::vector. If profiling determines that the
+    //    heap allocation is slow, an optimization might be used.
+    std::vector<double> bracketWidth(columns);
+#endif
+    for (size_t i = 0; i < columns; ++i) {
+        bracketWidth[i] = 0.0;
+    }
 
     std::vector<Bracket*> bl;
     bl.swap(system->brackets());
@@ -1886,9 +1888,7 @@ double SystemLayout::layoutBrackets(System* system, LayoutContext& ctx)
                 }
                 Bracket* b = SystemLayout::createBracket(system, ctx, bi, i, static_cast<int>(staffIdx), bl, system->firstMeasure());
                 if (b != nullptr) {
-                    b->mutLayoutData()->setBracketHeight(3.5 * b->spatium() * 2); // dummy
-                    TLayout::layout(b, b->mutLayoutData(), ctx.conf());
-                    bracketWidth[i] = std::max(bracketWidth[i], b->layoutData()->bracketWidth());
+                    bracketWidth[i] = std::max(bracketWidth[i], b->width());
                 }
             }
         }
@@ -2266,11 +2266,9 @@ void SystemLayout::layoutBracketsVertical(System* system, LayoutContext& ctx)
             sy = system->staves().at(staffIdx1)->bbox().top();
             ey = system->staves().at(staffIdx2)->bbox().bottom();
         }
-
-        Bracket::LayoutData* bldata = b->mutLayoutData();
-        bldata->setPosY(sy);
-        bldata->setBracketHeight(ey - sy);
-        TLayout::layout(b, bldata, ctx.conf());
+        b->mutLayoutData()->setPosY(sy);
+        b->setHeight(ey - sy);
+        TLayout::layout(b, ctx);
     }
 }
 

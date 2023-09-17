@@ -424,7 +424,7 @@ void NotationActionController::init()
     registerAction("add-down-bow", &Interaction::toggleArticulation, mu::engraving::SymId::stringsDownBow);
     registerAction("transpose-up", &Interaction::transposeSemitone, 1, PlayMode::PlayNote);
     registerAction("transpose-down", &Interaction::transposeSemitone, -1, PlayMode::PlayNote);
-    registerAction("toggle-insert-mode", [this]() { toggleNoteInputInsert(); }, &NotationActionController::isNotEditingElement);
+    //registerAction("toggle-insert-mode", );
 
     registerAction("get-location", &Interaction::getLocation, &Controller::isNotationPage);
     registerAction("toggle-mmrest", &Interaction::execute, &mu::engraving::Score::cmdToggleMmrest);
@@ -687,15 +687,6 @@ void NotationActionController::toggleNoteInputMethod(NoteInputMethod method)
     }
 
     noteInput->toggleNoteInputMethod(method);
-}
-
-void NotationActionController::toggleNoteInputInsert()
-{
-    if (currentNotationNoteInput()->state().method != NoteInputMethod::TIMEWISE) {
-        toggleNoteInputMethod(NoteInputMethod::TIMEWISE);
-    } else {
-        toggleNoteInputMethod(NoteInputMethod::STEPTIME);
-    }
 }
 
 void NotationActionController::addNote(NoteName note, NoteAddingMode addingMode)

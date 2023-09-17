@@ -161,7 +161,7 @@ public:
     LineStyleSelect(QObject* parent, QComboBox* lineStyleComboBox, const QList<QWidget*>& dashSpecificWidgets)
         : QObject(parent), lineStyleComboBox(lineStyleComboBox), dashSpecificWidgets(dashSpecificWidgets)
     {
-        connect(lineStyleComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &LineStyleSelect::update);
+        connect(lineStyleComboBox, &QComboBox::currentIndexChanged, this, &LineStyleSelect::update);
     }
 
     void update() const
@@ -785,7 +785,7 @@ EditStyle::EditStyle(QWidget* parent)
         comboFBFont->addItem(family);
     }
     comboFBFont->setCurrentIndex(0);
-    connect(comboFBFont, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &EditStyle::on_comboFBFont_currentIndexChanged);
+    connect(comboFBFont, &QComboBox::currentIndexChanged, this, &EditStyle::on_comboFBFont_currentIndexChanged);
 
     // ====================================================
     // Chord Symbols
@@ -837,10 +837,10 @@ EditStyle::EditStyle(QWidget* parent)
     connect(swingSixteenth, &QRadioButton::toggled, this, &EditStyle::setSwingParams);
 
     connect(concertPitch,        &QCheckBox::toggled, this, &EditStyle::concertPitchToggled);
-    connect(lyricsDashMinLength, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EditStyle::lyricsDashMinLengthValueChanged);
-    connect(lyricsDashMaxLength, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EditStyle::lyricsDashMaxLengthValueChanged);
-    connect(minSystemDistance,   QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EditStyle::systemMinDistanceValueChanged);
-    connect(maxSystemDistance,   QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &EditStyle::systemMaxDistanceValueChanged);
+    connect(lyricsDashMinLength, &QDoubleSpinBox::valueChanged, this, &EditStyle::lyricsDashMinLengthValueChanged);
+    connect(lyricsDashMaxLength, &QDoubleSpinBox::valueChanged, this, &EditStyle::lyricsDashMaxLengthValueChanged);
+    connect(minSystemDistance,   &QDoubleSpinBox::valueChanged, this, &EditStyle::systemMinDistanceValueChanged);
+    connect(maxSystemDistance,   &QDoubleSpinBox::valueChanged, this, &EditStyle::systemMaxDistanceValueChanged);
 
     accidentalsGroup->setVisible(false);   // disable, not yet implemented
 
@@ -868,13 +868,13 @@ EditStyle::EditStyle(QWidget* parent)
         }
 
         if (auto spinBox = qobject_cast<QSpinBox*>(sw.widget)) {
-            connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged), setSignalMapper, mapFunction);
+            connect(spinBox, &QSpinBox::valueChanged, setSignalMapper, mapFunction);
         } else if (auto doubleSpinBox = qobject_cast<QDoubleSpinBox*>(sw.widget)) {
-            connect(doubleSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), setSignalMapper, mapFunction);
+            connect(doubleSpinBox, &QDoubleSpinBox::valueChanged, setSignalMapper, mapFunction);
         } else if (auto fontComboBox = qobject_cast<QFontComboBox*>(sw.widget)) {
             connect(fontComboBox, &QFontComboBox::currentFontChanged, setSignalMapper, mapFunction);
         } else if (auto comboBox = qobject_cast<QComboBox*>(sw.widget)) {
-            connect(comboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), setSignalMapper, mapFunction);
+            connect(comboBox, &QComboBox::currentIndexChanged, setSignalMapper, mapFunction);
         } else if (auto radioButton = qobject_cast<QRadioButton*>(sw.widget)) {
             connect(radioButton, &QRadioButton::toggled, setSignalMapper, mapFunction);
         } else if (auto checkBox = qobject_cast<QCheckBox*>(sw.widget)) {
@@ -886,7 +886,7 @@ EditStyle::EditStyle(QWidget* parent)
         } else if (auto textEdit = qobject_cast<QTextEdit*>(sw.widget)) {
             connect(textEdit, &QTextEdit::textChanged, setSignalMapper, mapFunction);
         } else if (auto buttonGroup = qobject_cast<QButtonGroup*>(sw.widget)) {
-            connect(buttonGroup, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), setSignalMapper, mapFunction);
+            connect(buttonGroup, &QButtonGroup::buttonClicked, setSignalMapper, mapFunction);
         } else if (auto alignSelect = qobject_cast<AlignSelect*>(sw.widget)) {
             connect(alignSelect, &AlignSelect::alignChanged, setSignalMapper, mapFunction);
         } else if (auto offsetSelect = qobject_cast<OffsetSelect*>(sw.widget)) {
@@ -934,7 +934,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleFontSize, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::FontSize);
     });
-    connect(textStyleFontSize, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=]() {
+    connect(textStyleFontSize, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FontSize, QVariant(textStyleFontSize->value()));
     });
 
@@ -943,7 +943,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleLineSpacing, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::LineSpacing);
     });
-    connect(textStyleLineSpacing, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=]() {
+    connect(textStyleLineSpacing, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::LineSpacing, QVariant(textStyleLineSpacing->value()));
     });
 
@@ -987,7 +987,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleFrameType, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::FrameType);
     });
-    connect(textStyleFrameType, QOverload<int>::of(&QComboBox::currentIndexChanged), [=]() {
+    connect(textStyleFrameType, &QComboBox::currentIndexChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FrameType, textStyleFrameType->currentIndex());
     });
 
@@ -995,7 +995,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleFramePadding, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::FramePadding);
     });
-    connect(textStyleFramePadding, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=]() {
+    connect(textStyleFramePadding, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FramePadding, textStyleFramePadding->value());
     });
 
@@ -1003,7 +1003,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleFrameBorder, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::FrameWidth);
     });
-    connect(textStyleFrameBorder, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=]() {
+    connect(textStyleFrameBorder, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FrameWidth, textStyleFrameBorder->value());
     });
 
@@ -1011,7 +1011,7 @@ EditStyle::EditStyle(QWidget* parent)
     connect(resetTextStyleFrameBorderRadius, &QToolButton::clicked, [=]() {
         resetTextStyle(TextStylePropertyType::FrameRound);
     });
-    connect(textStyleFrameBorderRadius, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [=]() {
+    connect(textStyleFrameBorderRadius, &QDoubleSpinBox::valueChanged, [=]() {
         textStyleValueChanged(TextStylePropertyType::FrameRound, textStyleFrameBorderRadius->value());
     });
 
@@ -1043,20 +1043,14 @@ EditStyle::EditStyle(QWidget* parent)
     resetTabStylesButton->setVisible(false);
 
     connect(textStyles, &QListWidget::currentRowChanged, this, &EditStyle::textStyleChanged);
-    textStyles->setCurrentRow(s_lastSubPageRow);
+    textStyles->setCurrentRow(0);
 
     connect(pageList, &QListWidget::currentRowChanged, pageStack, &QStackedWidget::setCurrentIndex);
-    connect(pageList, &QListWidget::currentRowChanged, this, &EditStyle::on_pageRowSelectionChanged);
-    pageList->setCurrentRow(s_lastPageRow);
+    pageList->setCurrentRow(0);
 
     adjustPagesStackSize(0);
 
     WidgetStateStore::restoreGeometry(this);
-}
-
-EditStyle::EditStyle(const EditStyle& other)
-    : QDialog(other.parentWidget())
-{
 }
 
 //---------------------------------------------------------
@@ -1280,10 +1274,6 @@ QString EditStyle::currentSubPageCode() const
 {
     return m_currentSubPageCode;
 }
-
-int EditStyle::s_lastPageRow = 0;
-
-int EditStyle::s_lastSubPageRow = 0;
 
 QString EditStyle::pageCodeForElement(const EngravingItem* element)
 {
@@ -1572,15 +1562,6 @@ void EditStyle::on_resetTabStylesButton_clicked()
     for (int i = static_cast<int>(StyleId::slurShowTabSimple); i <= static_cast<int>(StyleId::golpeShowTabCommon); i++) {
         resetStyleValue(i);
     }
-}
-
-//---------------------------------------------------------
-//    On pageRowSelectionChanged
-//---------------------------------------------------------
-
-void EditStyle::on_pageRowSelectionChanged()
-{
-    s_lastPageRow = pageList->currentRow();
 }
 
 //---------------------------------------------------------
@@ -2304,8 +2285,6 @@ void EditStyle::textStyleChanged(int row)
     styleName->setText(score->getTextStyleUserName(tid).qTranslated());
     styleName->setEnabled(int(tid) >= int(TextStyleType::USER1));
     resetTextStyleName->setEnabled(styleName->text() != TConv::translatedUserName(tid));
-
-    s_lastSubPageRow = row;
 }
 
 //---------------------------------------------------------

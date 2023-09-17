@@ -50,7 +50,6 @@ class EditStyle : public QDialog, private Ui::EditStyleBase
 
 public:
     EditStyle(QWidget* = nullptr);
-    EditStyle(const EditStyle&);
 
     QString currentPageCode() const;
     QString currentSubPageCode() const;
@@ -135,7 +134,6 @@ private slots:
     void on_buttonTogglePagelist_clicked();
     void on_resetStylesButton_clicked();
     void on_resetTabStylesButton_clicked();
-    void on_pageRowSelectionChanged();
     void editUserStyleName();
     void endEditUserStyleName();
     void resetUserStyleName();
@@ -143,12 +141,7 @@ private slots:
 private:
     QString m_currentPageCode;
     QString m_currentSubPageCode;
-
-    static int s_lastPageRow;
-    static int s_lastSubPageRow;
 };
 }
-
-Q_DECLARE_METATYPE(mu::notation::EditStyle)
 
 #endif // MU_NOTATION_EDITSTYLE_H

@@ -61,7 +61,6 @@
 #include "engraving/dom/articulation.h"
 #include "engraving/dom/barline.h"
 #include "engraving/dom/beam.h"
-#include "engraving/dom/box.h"
 #include "engraving/dom/bracket.h"
 #include "engraving/dom/breath.h"
 #include "engraving/dom/chord.h"
@@ -110,6 +109,7 @@
 #include "engraving/dom/system.h"
 #include "engraving/dom/tempotext.h"
 #include "engraving/dom/text.h"
+#include "engraving/dom/textframe.h"
 #include "engraving/dom/textlinebase.h"
 #include "engraving/dom/tie.h"
 #include "engraving/dom/timesig.h"
@@ -7507,7 +7507,7 @@ void ExportMusicXml::writeMeasure(const Measure* const m,
             _xml.tag("staves", static_cast<int>(staves));
         }
         if (instrMap.size() > 1) {
-            _xml.tag("instruments", instrMap.size());
+            _xml.tag("instruments", static_cast<int>(instrMap.size()));
         }
     }
 
@@ -7970,7 +7970,7 @@ void ExportMusicXml::harmony(Harmony const* const h, FretDiagram const* const fd
                         && !kindText.isEmpty() && kindText[0].isDigit()) {
                         // hack to correct text for suspended chords whose kind text has degree information baked in
                         // (required by some other applications)
-                        int tagDegree = tag.midRef(3).toInt();
+                        int tagDegree = tag.mid(3).toInt();
                         QString kindTextExtension;
                         for (int i = 0; i < kindText.length() && kindText[i].isDigit(); ++i) {
                             kindTextExtension[i] = kindText[i];

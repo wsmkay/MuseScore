@@ -48,9 +48,6 @@ class EditDrumsetDialog : public QDialog, private Ui::EditDrumsetDialog
 
 public:
     EditDrumsetDialog(QWidget* parent = nullptr);
-    EditDrumsetDialog(const EditDrumsetDialog& other);
-
-    static int static_metaTypeId();
 
 private slots:
     void bboxClicked(QAbstractButton* button);
@@ -84,7 +81,5 @@ private:
     engraving::Drumset m_editedDrumset;
 };
 }
-
-Q_DECLARE_METATYPE(mu::palette::EditDrumsetDialog)
 
 #endif // MU_PALETTE_EDITDRUMSETDIALOG_H

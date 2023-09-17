@@ -693,7 +693,7 @@ Rectangle {
 
             path: "/some/test/path/foo.txt"
 
-            onPathEdited: {
+            onPathEdited: function(newPath) {
                 path = newPath
             }
         }
@@ -709,7 +709,7 @@ Rectangle {
 
             path: "/some/test/path1;/some/test/path2"
 
-            onPathEdited: {
+            onPathEdited: function(newPath) {
                 path = newPath
             }
         }

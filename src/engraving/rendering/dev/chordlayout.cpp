@@ -59,6 +59,7 @@
 #include "dom/utils.h"
 
 #include "tlayout.h"
+#include "arpeggiolayout.h"
 #include "slurtielayout.h"
 #include "beamlayout.h"
 #include "autoplace.h"
@@ -178,7 +179,8 @@ void ChordLayout::layoutPitched(Chord* item, LayoutContext& ctx)
     item->addLedgerLines();
 
     if (item->arpeggio()) {
-        TLayout::layout(item->arpeggio(), item->arpeggio()->mutLayoutData(), ctx.conf());
+        ArpeggioLayout::computeHeight(item->arpeggio());
+        TLayout::layout(item->arpeggio(), ctx);
 
         double arpeggioNoteDistance = ctx.conf().styleMM(Sid::ArpeggioNoteDistance) * mag_;
 
@@ -506,9 +508,12 @@ void ChordLayout::layoutTablature(Chord* item, LayoutContext& ctx)
     }                                     // end of if(duration_symbols)
 
     if (item->arpeggio()) {
-        double y = upnote->pos().y() - upnote->headHeight() * .5;
-        TLayout::layout(item->arpeggio(), item->arpeggio()->mutLayoutData(), ctx.conf());
+        double headHeight = upnote->headHeight();
+        TLayout::layout(item->arpeggio(), ctx);
         lll += item->arpeggio()->width() + _spatium * .5;
+        double y = item->upNote()->pos().y() - headHeight * .5;
+        double h = item->downNote()->pos().y() + item->downNote()->headHeight() - y;
+        item->arpeggio()->setHeight(h);
         item->arpeggio()->setPos(-lll, y);
 
         // handle the special case of _arpeggio->span() > 1
@@ -698,7 +703,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
     double mag            = (staffType->isSmall() ? ctx.conf().styleD(Sid::smallStaffMag) : 1.0) * staffType->userMag();
     double _spatium       = ctx.conf().spatium() * mag;
     double _lineDist       = ((staffType && staffType->xmlName() == "stdJianpu")
-                              && (staffType && staffType->lines() == 0)) ? 0.5 : _spatium* staffType->lineDistance().val() / 2;
+                              && (staffType && staffType->lines() == 0)) ? 0.5 : _spatium * staffType->lineDistance().val() / 2;
     const double minDist = ctx.conf().styleMM(Sid::articulationMinDistance);
     const ArticulationStemSideAlign articulationHAlign = ctx.conf().styleV(Sid::articulationStemHAlign).value<ArticulationStemSideAlign>();
     const bool keepArticsTogether = ctx.conf().styleB(Sid::articulationKeepTogether);
@@ -752,7 +757,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
         }
 
         bool bottom = !a->up();      // true: articulation is below chord;  false: articulation is above chord
-        TLayout::layoutItem(a, ctx);     // must be done after assigning direction, or else symId is not reliable
+        TLayout::layout(a, ctx);     // must be done after assigning direction, or else symId is not reliable
 
         bool headSide = bottom == item->up();
         double y = 0.0;
@@ -1023,7 +1028,7 @@ void ChordLayout::layoutArticulations2(Chord* item, LayoutContext& ctx, bool lay
             stacc = nullptr;
         }
         if (!a->layoutCloseToNote()) {
-            TLayout::layoutItem(a, ctx);
+            TLayout::layout(a, ctx);
             if (a->up()) {
                 a->setPos(!item->up() || !a->isBasicArticulation() ? headSideX : stemSideX, staffTopY + kearnHeight);
                 if (a->visible()) {
@@ -2368,7 +2373,7 @@ void ChordLayout::layoutChords3(const MStyle& style, const std::vector<Chord*>& 
             prevLine = note->line();
             prevSubtype = ac->subtype();
             ac->computeMag();
-            TLayout::layoutItem(ac, ctx);
+            TLayout::layout(ac, ctx);
             if (!ac->visible() || note->fixed()) {
                 ac->setPos(ac->layoutData()->bbox().x() - ac->width(), 0.0);
             } else {

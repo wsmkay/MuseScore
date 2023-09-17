@@ -164,7 +164,9 @@ EngravingItem* Clef::drop(EditData& data)
 
 void Clef::setSmall(bool val)
 {
-    m_isSmall = val;
+    if (val != m_isSmall) {
+        m_isSmall = val;
+    }
 }
 
 //---------------------------------------------------------
@@ -534,7 +536,7 @@ String Clef::accessibleInfo() const
 void Clef::clear()
 {
     LayoutData* ldata = mutLayoutData();
-    ldata->clearBbox();
+    ldata->resetBbox();
     ldata->symId = SymId::noSym;
     Clef* pairedClef = otherClef();
     if (selected() && !m_isHeader && pairedClef) {

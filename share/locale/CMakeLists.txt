@@ -26,9 +26,9 @@ file(GLOB QT_TS_FILES           ${CMAKE_CURRENT_LIST_DIR}/qt_*.ts )
 if (MUE_RUN_LRELEASE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_LIST_DIR}/musescore_en_US.qm
-        COMMAND Qt5::lrelease ${INSTRUMENTS_TS_FILES}
-        COMMAND Qt5::lrelease ${MUSESCORE_TS_FILES}
-        COMMAND Qt5::lrelease ${QT_TS_FILES}
+        COMMAND Qt6::lrelease ${INSTRUMENTS_TS_FILES}
+        COMMAND Qt6::lrelease ${MUSESCORE_TS_FILES}
+        COMMAND Qt6::lrelease ${QT_TS_FILES}
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
     )
 

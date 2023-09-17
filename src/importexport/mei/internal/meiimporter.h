@@ -106,10 +106,7 @@ private:
     bool readNote(pugi::xml_node noteNode, engraving::Measure* measure, int track, int& ticks, engraving::Chord* chord = nullptr);
     bool readRest(pugi::xml_node restNode, engraving::Measure* measure, int track, int& ticks);
     bool readSpace(pugi::xml_node spaceNode, engraving::Measure* measure, int track, int& ticks);
-    bool readSyl(pugi::xml_node sylNode, engraving::Lyrics* lyrics, Convert::textWithSmufl& textBlocks, ElisionType elision);
     bool readTuplet(pugi::xml_node tupletNode, engraving::Measure* measure, int track, int& ticks);
-    bool readVerses(pugi::xml_node parentNode, engraving::Chord* chord);
-    bool readVerse(pugi::xml_node verseNode, engraving::Chord* chord);
 
     /**
      * Methods for parsing MEI control events (within <measure>)
@@ -122,15 +119,14 @@ private:
     bool readFermata(pugi::xml_node fermataNode, engraving::Measure* measure);
     bool readHairpin(pugi::xml_node hairpinNode, engraving::Measure* measure);
     bool readHarm(pugi::xml_node harmNode, engraving::Measure* measure);
-    bool readMordent(pugi::xml_node mordentNode, engraving::Measure* measure);
     bool readOctave(pugi::xml_node octaveNode, engraving::Measure* measure);
-    bool readOrnam(pugi::xml_node ornamNode, engraving::Measure* measure);
     bool readRepeatMark(pugi::xml_node repeatMarkNode, engraving::Measure* measure);
     bool readSlur(pugi::xml_node slurNode, engraving::Measure* measure);
+    bool readSyl(pugi::xml_node sylNode, engraving::Lyrics* lyrics, Convert::textWithSmufl& textBlocks, ElisionType elision);
     bool readTempo(pugi::xml_node tempoNode, engraving::Measure* measure);
     bool readTie(pugi::xml_node tieNode, engraving::Measure* measure);
-    bool readTrill(pugi::xml_node trillNode, engraving::Measure* measure);
-    bool readTurn(pugi::xml_node turnNode, engraving::Measure* measure);
+    bool readVerses(pugi::xml_node parentNode, engraving::Chord* chord);
+    bool readVerse(pugi::xml_node verseNode, engraving::Chord* chord);
 
     /**
      * Methods for parsing specific MEI attribute classes within elements
@@ -166,7 +162,6 @@ private:
     bool addGraceNotesToChord(engraving::ChordRest* chordRest, bool isAfter = false);
     engraving::EngravingItem* addAnnotation(const libmei::Element& meiElement, engraving::Measure* measure);
     engraving::Spanner* addSpanner(const libmei::Element& meiElement, engraving::Measure* measure, pugi::xml_node node);
-    engraving::EngravingItem* addArticulation(const libmei::Element& meiElement, engraving::Measure* measure);
     std::string xmlIdFrom(std::string dataURI);
     engraving::ChordRest* findStart(const libmei::Element& meiElement, engraving::Measure* measure);
     engraving::ChordRest* findEnd(pugi::xml_node controlNode, const engraving::ChordRest* startChordRest);
@@ -178,7 +173,6 @@ private:
     void addChordtoLyricsToExtend(ChordRest* chordRest);
     void extendLyrics(const std::pair<engraving::Lyrics*, engraving::ChordRest*>& lyricsToExtend);
     void extendLyrics();
-    void setOrnamentAccid(engraving::Ornament* ornament, const Convert::OrnamStruct& ornamSt);
 
     /** The Score pointer */
     engraving::Score* m_score = nullptr;

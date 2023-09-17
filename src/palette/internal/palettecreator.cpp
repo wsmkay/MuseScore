@@ -991,7 +991,7 @@ PalettePtr PaletteCreator::newBreathPalette(bool defaultPalette)
         sp->appendElement(f, f->typeUserName());
     }
 
-    for (BreathType breath : Breath::BREATH_LIST) {
+    for (BreathType breath : Breath::breathList) {
         if ((breath.id == SymId::chantCaesura || breath.id == SymId::caesuraSingleStroke) && defaultPalette) {
             continue;
         }

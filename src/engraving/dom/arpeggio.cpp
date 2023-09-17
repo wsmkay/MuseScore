@@ -47,6 +47,7 @@ Arpeggio::Arpeggio(Chord* parent)
     : EngravingItem(ElementType::ARPEGGIO, parent, ElementFlag::MOVABLE)
 {
     m_arpeggioType = ArpeggioType::NORMAL;
+    setHeight(spatium() * 4);        // for use in palettes
     m_span     = 1;
     m_userLen1 = 0.0;
     m_userLen2 = 0.0;
@@ -65,14 +66,7 @@ const TranslatableString& Arpeggio::arpeggioTypeName() const
 
 void Arpeggio::setHeight(double h)
 {
-    UNREACHABLE;
-    mutLayoutData()->arpeggioHeight = h;
-}
-
-double Arpeggio::height() const
-{
-    UNREACHABLE;
-    return layoutData()->arpeggioHeight;
+    m_height = h;
 }
 
 //---------------------------------------------------------

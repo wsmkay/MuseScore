@@ -1158,7 +1158,6 @@ void BeamLayout::createBeamSegment(Beam* item, ChordRest* startCr, ChordRest* en
     const bool firstUp = startCr->up();
     const bool lastUp = endCr->up();
     bool overallUp = item->up();
-
     if ((item->staffType() && item->staffType()->xmlName() == "stdJianpu")
         && (item->staffType() && item->staffType()->lines() == 0)) {
         overallUp = true;

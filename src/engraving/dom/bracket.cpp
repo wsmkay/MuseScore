@@ -42,6 +42,7 @@ Bracket::Bracket(EngravingItem* parent)
     : EngravingItem(ElementType::BRACKET, parent)
 {
     m_ay1          = 0;
+    m_h2           = 3.5 * spatium();
     m_firstStaff  = 0;
     m_lastStaff   = 0;
     m_bi          = 0;
@@ -78,8 +79,7 @@ Fraction Bracket::playTick() const
 
 void Bracket::setHeight(double h)
 {
-    UNREACHABLE;
-    mutLayoutData()->setBracketHeight(h);
+    m_h2 = h * .5;
 }
 
 //---------------------------------------------------------
@@ -88,8 +88,30 @@ void Bracket::setHeight(double h)
 
 double Bracket::width(LD_ACCESS) const
 {
-    UNREACHABLE;
-    return layoutData()->bracketWidth();
+    double w;
+    switch (bracketType()) {
+    case BracketType::BRACE:
+        if (style().styleSt(Sid::MusicalSymbolFont) == "Emmentaler" || style().styleSt(Sid::MusicalSymbolFont) == "Gonville") {
+            w = style().styleMM(Sid::akkoladeWidth) + style().styleMM(Sid::akkoladeBarDistance);
+        } else {
+            w = (symWidth(m_braceSymbol) * m_magx) + style().styleMM(Sid::akkoladeBarDistance);
+        }
+        break;
+    case BracketType::NORMAL:
+        w = style().styleMM(Sid::bracketWidth) + style().styleMM(Sid::bracketDistance);
+        break;
+    case BracketType::SQUARE:
+        w = style().styleMM(Sid::staffLineWidth) / 2 + 0.5 * spatium();
+        break;
+    case BracketType::LINE:
+        w = 0.67 * style().styleMM(Sid::bracketWidth) + style().styleMM(Sid::bracketDistance);
+        break;
+    case BracketType::NO_BRACKET:
+    default:
+        w = 0.0;
+        break;
+    }
+    return w;
 }
 
 //---------------------------------------------------------
@@ -157,7 +179,7 @@ void Bracket::startEdit(EditData& ed)
 
 std::vector<PointF> Bracket::gripsPositions(const EditData&) const
 {
-    return { PointF(0.0, layoutData()->bracketHeight()) + pagePos() };
+    return { PointF(0.0, m_h2 * 2) + pagePos() };
 }
 
 //---------------------------------------------------------
@@ -172,9 +194,7 @@ void Bracket::endEdit(EditData& ed)
 
 void Bracket::editDrag(EditData& ed)
 {
-    double bracketHeight = layoutData()->bracketHeight();
-    bracketHeight += ed.delta.y();
-    mutLayoutData()->setBracketHeight(bracketHeight);
+    m_h2 += ed.delta.y() * .5;
 
     renderer()->layoutItem(this);
 }
@@ -186,7 +206,7 @@ void Bracket::editDrag(EditData& ed)
 
 void Bracket::endEditDrag(EditData&)
 {
-    double ay2 = m_ay1 + layoutData()->bracketHeight();
+    double ay2 = m_ay1 + m_h2 * 2;
 
     staff_idx_t staffIdx1 = staffIdx();
     staff_idx_t staffIdx2;
@@ -211,7 +231,7 @@ void Bracket::endEditDrag(EditData&)
 
     double sy = system()->staff(staffIdx1)->y();
     double ey = system()->staff(staffIdx2)->y() + score()->staff(staffIdx2)->height();
-    mutLayoutData()->setBracketHeight(ey - sy);
+    m_h2 = (ey - sy) * .5;
     bracketItem()->undoChangeProperty(Pid::BRACKET_SPAN, staffIdx2 - staffIdx1 + 1);
 }
 

@@ -1206,7 +1206,7 @@ void GuitarPro::createMeasures()
 {
     Fraction tick = Fraction(0, 1);
     Fraction ts;
-    LOGD("measures %d bars.size %d", measures, bars.size());
+    LOGD("measures %d bars.size %lld", measures, bars.size());
 
     //      for (int i = 0; i < measures; ++i) {
     for (size_t i = 0; i < bars.size(); ++i) {     // ?? (ws)

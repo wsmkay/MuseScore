@@ -32,6 +32,8 @@
 #include "modularity/ioc.h"
 #include "context/iglobalcontext.h"
 
+Q_MOC_INCLUDE("plugins/api/selection.h")
+
 namespace mu::engraving {
 class InstrumentTemplate;
 }

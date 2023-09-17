@@ -74,7 +74,7 @@ using namespace mu::engraving;
 
 #define SCOREDEF_IDX -1
 
-#define MEI_BASIC_VERSION "5.0+basic"
+#define MEI_BASIC_VERSION "5.0.0-dev+basic"
 
 /**
  * Read the Score from the file.
@@ -491,37 +491,6 @@ Spanner* MeiImporter::addSpanner(const libmei::Element& meiElement, Measure* mea
 }
 
 /**
- * Create a articulation (MEI control event with @startid).
- * Create the EngravingItem according to the MEI element name (e.g., "mordent", "artic")
- * The articulation object is added to the EngravingItem (and not to the segment as for annotations)
- * Return nullptr if the lookup fails.
- */
-
-EngravingItem* MeiImporter::addArticulation(const libmei::Element& meiElement, Measure* measure)
-{
-    ChordRest* chordRest = this->findStart(meiElement, measure);
-    if (!chordRest) {
-        return nullptr;
-    }
-
-    EngravingItem* item = nullptr;
-
-    static const std::vector<std::string> s_ornaments = { "mordent", "ornam", "trill", "turn" };
-
-    if (std::find(s_ornaments.begin(), s_ornaments.end(), meiElement.m_name) != s_ornaments.end()) {
-        item = Factory::createOrnament(chordRest);
-    } else {
-        return nullptr;
-    }
-    m_uids->reg(item, meiElement.m_xmlId);
-
-    item->setTrack(chordRest->track());
-    chordRest->add(item);
-
-    return item;
-}
-
-/**
  * Basic helper that removes the '#' characther from a dataURI reference to \@xml:id.
  */
 
@@ -770,27 +739,6 @@ void MeiImporter::extendLyrics()
     }
 }
 
-/**
- * Creates the accidentals (above and below) for an ornament.
- * Currently does not work if the corresponding OrnamentInterval value is not set in the Ornament.
- */
-
-void MeiImporter::setOrnamentAccid(engraving::Ornament* ornament, const Convert::OrnamStruct& ornamSt)
-{
-    if (ornament->hasIntervalAbove() && (ornamSt.accidTypeAbove != AccidentalType::NONE)) {
-        Accidental* accidental = Factory::createAccidental(ornament);
-        accidental->setAccidentalType(ornamSt.accidTypeAbove);
-        accidental->setParent(ornament);
-        ornament->setAccidentalAbove(accidental);
-    }
-    if (ornament->hasIntervalBelow() && (ornamSt.accidTypeBelow != AccidentalType::NONE)) {
-        Accidental* accidental = Factory::createAccidental(ornament);
-        accidental->setAccidentalType(ornamSt.accidTypeBelow);
-        accidental->setParent(ornament);
-        ornament->setAccidentalBelow(accidental);
-    }
-}
-
 //---------------------------------------------------------
 // parsing methods
 //---------------------------------------------------------
@@ -1025,7 +973,7 @@ bool MeiImporter::readLinesWithSmufl(pugi::xml_node parentNode, StringList& line
         else if (this->isNode(child, u"rend")) {
             libmei::Rend meiRend;
             meiRend.Read(child);
-            bool isSmufl = (meiRend.HasGlyphAuth() && meiRend.GetGlyphAuth() == SMUFL_AUTH);
+            bool isSmufl = (meiRend.HasGlyphAuth() && meiRend.GetGlyphAuth() == "smufl");
             // If smufl, add its text as smufl, otherwise as text
             lineBlocks.push_back(std::make_pair(isSmufl, String(child.first_child().text().as_string())));
         }
@@ -1623,7 +1571,6 @@ bool MeiImporter::readMRest(pugi::xml_node mRestNode, Measure* measure, int trac
 
     Segment* segment = measure->getSegment(SegmentType::ChordRest, Fraction::fromTicks(ticks) + measure->tick());
     Rest* rest = Factory::createRest(segment, TDuration(DurationType::V_MEASURE));
-    Convert::colorFromMEI(rest, meiMRest);
     m_uids->reg(rest, meiMRest.m_xmlId);
     rest->setTicks(m_currentTimeSig);
     rest->setDurationType(DurationType::V_MEASURE);
@@ -1688,7 +1635,6 @@ bool MeiImporter::readNote(pugi::xml_node noteNode, Measure* measure, int track,
     }
 
     Note* note = Factory::createNote(chord);
-    Convert::colorFromMEI(note, meiNote);
     m_uids->reg(note, meiNote.m_xmlId);
 
     // If there is a reference to the note in the MEI, add it the maps (e.g., for ties)
@@ -1729,7 +1675,6 @@ bool MeiImporter::readRest(pugi::xml_node restNode, Measure* measure, int track,
     meiRest.Read(restNode);
 
     Rest* rest = static_cast<Rest*>(addChordRest(restNode, measure, track, meiRest, ticks, true));
-    Convert::colorFromMEI(rest, meiRest);
 
     UNUSED(rest);
 
@@ -1751,27 +1696,6 @@ bool MeiImporter::readSpace(pugi::xml_node spaceNode, Measure* measure, int trac
 
     Rest* space = static_cast<Rest*>(addChordRest(spaceNode, measure, track, meiSpace, ticks, true));
     space->setVisible(false);
-
-    return true;
-}
-
-/**
- * Read a syl
- */
-
-bool MeiImporter::readSyl(pugi::xml_node sylNode, Lyrics* lyrics, Convert::textWithSmufl& textBlocks, ElisionType elision)
-{
-    IF_ASSERT_FAILED(lyrics) {
-        return false;
-    }
-
-    bool warning;
-    libmei::Syl meiSyl;
-    meiSyl.Read(sylNode);
-
-    Convert::sylFromMEI(lyrics, meiSyl, elision, warning);
-
-    textBlocks.push_back(std::make_pair(false, String(sylNode.text().as_string())));
 
     return true;
 }
@@ -1824,97 +1748,6 @@ bool MeiImporter::readTuplet(pugi::xml_node tupletNode, Measure* measure, int tr
     return success;
 }
 
-/**
- * Loop through the content of the MEI <note> or <chord> and read the verses
- */
-
-bool MeiImporter::readVerses(pugi::xml_node parentNode, Chord* chord)
-{
-    IF_ASSERT_FAILED(chord) {
-        return false;
-    }
-
-    bool success = true;
-
-    pugi::xpath_node_set elements = parentNode.select_nodes("./verse");
-    for (pugi::xpath_node xpathNode : elements) {
-        success = success && this->readVerse(xpathNode.node(), chord);
-    }
-
-    // The chord as a potential end point for the lyrics to extend (all lyrics no for that track)
-    this->addChordtoLyricsToExtend(chord);
-
-    return success;
-}
-
-/**
- * Read a verse.
- */
-
-bool MeiImporter::readVerse(pugi::xml_node verseNode, Chord* chord)
-{
-    IF_ASSERT_FAILED(chord) {
-        return false;
-    }
-
-    libmei::Verse meiVerse;
-    meiVerse.Read(verseNode);
-
-    int no = 0;
-    if (meiVerse.HasN()) {
-        no = std::stoi(meiVerse.GetN()) - 1;
-        // Make sure we have no verse number below 0;
-        no = std::max(0, no);
-    }
-
-    // First check if we have a lyric extension that needs to be ended for that track / no
-    if (this->hasLyricsToExtend(chord->track(), no)) {
-        auto lyricsToExtend = this->getLyricsToExtend(chord->track(), no);
-        this->extendLyrics(lyricsToExtend);
-        // Remove it from the lyrics to extend
-        m_lyricExtenders.at(chord->track()).erase(no);
-    }
-
-    Lyrics* lyrics = Factory::createLyrics(chord);
-    Convert::colorFromMEI(lyrics, meiVerse);
-
-    bool success = true;
-
-    // If the verse has a syl with @con="u", add it to the lyrics to extend
-    pugi::xpath_node extender = verseNode.select_node("./syl[@con='u']");
-    if (extender) {
-        m_lyricExtenders[chord->track()][no] = std::make_pair(lyrics, nullptr);
-    }
-
-    // Aggregate the syllable into line blocks
-    Convert::textWithSmufl textBlocks;
-    pugi::xpath_node_set elements = verseNode.select_nodes("./syl");
-
-    // If we have more than one syl we assume to have elision
-    ElisionType elision = (elements.size() > 1) ? ElisionFirst : ElisionNone;
-    size_t sylCount = 0;
-
-    for (pugi::xpath_node xpathNode : elements) {
-        if (sylCount > 0) {
-            textBlocks.push_back(std::make_pair(true, u"\uE551"));
-        }
-
-        success = success && this->readSyl(xpathNode.node(), lyrics, textBlocks, elision);
-        sylCount++;
-        elision = (sylCount == elements.size() - 1) ? ElisionLast : ElisionMiddle;
-    }
-
-    String syllable;
-    Convert::textFromMEI(syllable, textBlocks);
-
-    lyrics->setXmlText(syllable);
-    lyrics->setNo(no);
-    lyrics->setTrack(chord->track());
-    chord->add(lyrics);
-
-    return success;
-}
-
 //---------------------------------------------------------
 // read MEI control events
 //---------------------------------------------------------
@@ -1948,12 +1781,8 @@ bool MeiImporter::readControlEvents(pugi::xml_node parentNode, Measure* measure)
             success = success && this->readHairpin(xpathNode.node(), measure);
         } else if (elementName == "harm") {
             success = success && this->readHarm(xpathNode.node(), measure);
-        } else if (elementName == "mordent") {
-            success = success && this->readMordent(xpathNode.node(), measure);
         } else if (elementName == "octave") {
             success = success && this->readOctave(xpathNode.node(), measure);
-        } else if (elementName == "ornam") {
-            success = success && this->readOrnam(xpathNode.node(), measure);
         } else if (elementName == "repeatMark") {
             success = success && this->readRepeatMark(xpathNode.node(), measure);
         } else if (elementName == "slur") {
@@ -1962,10 +1791,6 @@ bool MeiImporter::readControlEvents(pugi::xml_node parentNode, Measure* measure)
             success = success && this->readTempo(xpathNode.node(), measure);
         } else if (elementName == "tie") {
             success = success && this->readTie(xpathNode.node(), measure);
-        } else if (elementName == "trill") {
-            success = success && this->readTrill(xpathNode.node(), measure);
-        } else if (elementName == "turn") {
-            success = success && this->readTurn(xpathNode.node(), measure);
         }
     }
     return success;
@@ -2181,32 +2006,6 @@ bool MeiImporter::readHarm(pugi::xml_node harmNode, Measure* measure)
 }
 
 /**
- * Read a mordent.
- */
-
-bool MeiImporter::readMordent(pugi::xml_node mordentNode, Measure* measure)
-{
-    IF_ASSERT_FAILED(measure) {
-        return false;
-    }
-
-    bool warning;
-    libmei::Mordent meiMordent;
-    meiMordent.Read(mordentNode);
-
-    Ornament* ornament = static_cast<Ornament*>(this->addArticulation(meiMordent, measure));
-    if (!ornament) {
-        // Warning message given in MeiExpoter::addSpanner
-        return true;
-    }
-
-    Convert::OrnamStruct ornamSt = Convert::mordentFromMEI(ornament, meiMordent, warning);
-    this->setOrnamentAccid(ornament, ornamSt);
-
-    return true;
-}
-
-/**
  * Read a octave.
  */
 
@@ -2227,32 +2026,6 @@ bool MeiImporter::readOctave(pugi::xml_node octaveNode, Measure* measure)
     }
 
     Convert::octaveFromMEI(ottava, meiOctave, warning);
-
-    return true;
-}
-
-/**
- * Read a ornam.
- */
-
-bool MeiImporter::readOrnam(pugi::xml_node ornamNode, Measure* measure)
-{
-    IF_ASSERT_FAILED(measure) {
-        return false;
-    }
-
-    bool warning;
-    libmei::Ornam meiOrnam;
-    meiOrnam.Read(ornamNode);
-
-    Ornament* ornament = static_cast<Ornament*>(this->addArticulation(meiOrnam, measure));
-    if (!ornament) {
-        // Warning message given in MeiExpoter::addSpanner
-        return true;
-    }
-
-    Convert::OrnamStruct ornamSt = Convert::ornamFromMEI(ornament, meiOrnam, warning);
-    this->setOrnamentAccid(ornament, ornamSt);
 
     return true;
 }
@@ -2309,6 +2082,27 @@ bool MeiImporter::readSlur(pugi::xml_node slurNode, Measure* measure)
     }
 
     Convert::slurFromMEI(slur, meiSlur, warning);
+
+    return true;
+}
+
+/**
+ *
+ */
+
+bool MeiImporter::readSyl(pugi::xml_node sylNode, Lyrics* lyrics, Convert::textWithSmufl& textBlocks, ElisionType elision)
+{
+    IF_ASSERT_FAILED(lyrics) {
+        return false;
+    }
+
+    bool warning;
+    libmei::Syl meiSyl;
+    meiSyl.Read(sylNode);
+
+    Convert::sylFromMEI(lyrics, meiSyl, elision, warning);
+
+    textBlocks.push_back(std::make_pair(false, String(sylNode.text().as_string())));
 
     return true;
 }
@@ -2378,55 +2172,93 @@ bool MeiImporter::readTie(pugi::xml_node tieNode, Measure* measure)
 }
 
 /**
- * Read a trill.
+ * Loop through the content of the MEI <note> or <chord> and read the verses
  */
 
-bool MeiImporter::readTrill(pugi::xml_node trillNode, Measure* measure)
+bool MeiImporter::readVerses(pugi::xml_node parentNode, Chord* chord)
 {
-    IF_ASSERT_FAILED(measure) {
+    IF_ASSERT_FAILED(chord) {
         return false;
     }
 
-    bool warning;
-    libmei::Trill meiTrill;
-    meiTrill.Read(trillNode);
+    bool success = true;
 
-    Ornament* ornament = static_cast<Ornament*>(this->addArticulation(meiTrill, measure));
-    if (!ornament) {
-        // Warning message given in MeiExpoter::addSpanner
-        return true;
+    pugi::xpath_node_set elements = parentNode.select_nodes("./verse");
+    for (pugi::xpath_node xpathNode : elements) {
+        success = success && this->readVerse(xpathNode.node(), chord);
     }
 
-    Convert::OrnamStruct ornamSt = Convert::trillFromMEI(ornament, meiTrill, warning);
-    this->setOrnamentAccid(ornament, ornamSt);
+    // The chord as a potential end point for the lyrics to extend (all lyrics no for that track)
+    this->addChordtoLyricsToExtend(chord);
 
-    return true;
+    return success;
 }
 
 /**
- * Read a mordent.
+ * Read a verse.
  */
 
-bool MeiImporter::readTurn(pugi::xml_node turnNode, Measure* measure)
+bool MeiImporter::readVerse(pugi::xml_node verseNode, Chord* chord)
 {
-    IF_ASSERT_FAILED(measure) {
+    IF_ASSERT_FAILED(chord) {
         return false;
     }
 
-    bool warning;
-    libmei::Turn meiTurn;
-    meiTurn.Read(turnNode);
+    libmei::Verse meiVerse;
+    meiVerse.Read(verseNode);
 
-    Ornament* ornament = static_cast<Ornament*>(this->addArticulation(meiTurn, measure));
-    if (!ornament) {
-        // Warning message given in MeiExpoter::addSpanner
-        return true;
+    int no = 0;
+    if (meiVerse.HasN()) {
+        no = std::stoi(meiVerse.GetN()) - 1;
+        // Make sure we have no verse number below 0;
+        no = std::max(0, no);
     }
 
-    Convert::OrnamStruct ornamSt = Convert::turnFromMEI(ornament, meiTurn, warning);
-    this->setOrnamentAccid(ornament, ornamSt);
+    // First check if we have a lyric extension that needs to be ended for that track / no
+    if (this->hasLyricsToExtend(chord->track(), no)) {
+        auto lyricsToExtend = this->getLyricsToExtend(chord->track(), no);
+        this->extendLyrics(lyricsToExtend);
+        // Remove it from the lyrics to extend
+        m_lyricExtenders.at(chord->track()).erase(no);
+    }
 
-    return true;
+    Lyrics* lyrics = Factory::createLyrics(chord);
+
+    bool success = true;
+
+    // If the verse has a syl with @con="u", add it to the lyrics to extend
+    pugi::xpath_node extender = verseNode.select_node("./syl[@con='u']");
+    if (extender) {
+        m_lyricExtenders[chord->track()][no] = std::make_pair(lyrics, nullptr);
+    }
+
+    // Aggregate the syllable into line blocks
+    Convert::textWithSmufl textBlocks;
+    pugi::xpath_node_set elements = verseNode.select_nodes("./syl");
+
+    // If we have more than one syl we assume to have elision
+    ElisionType elision = (elements.size() > 1) ? ElisionFirst : ElisionNone;
+    size_t sylCount = 0;
+
+    for (pugi::xpath_node xpathNode : elements) {
+        if (sylCount > 0) {
+            textBlocks.push_back(std::make_pair(true, u"\uE551"));
+        }
+
+        success = success && this->readSyl(xpathNode.node(), lyrics, textBlocks, elision);
+        sylCount++;
+        elision = (sylCount == elements.size() - 1) ? ElisionLast : ElisionMiddle;
+    }
+
+    String syllable;
+    Convert::textFromMEI(syllable, textBlocks);
+
+    lyrics->setXmlText(syllable);
+    lyrics->setNo(no);
+    lyrics->setTrack(chord->track());
+    chord->add(lyrics);
+
+    return success;
 }
 
 //---------------------------------------------------------

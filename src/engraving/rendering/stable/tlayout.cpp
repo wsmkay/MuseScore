@@ -133,6 +133,7 @@
 
 #include "../dom/tempotext.h"
 #include "../dom/text.h"
+#include "../dom/textframe.h"
 #include "../dom/textline.h"
 #include "../dom/tie.h"
 #include "../dom/timesig.h"
@@ -677,7 +678,7 @@ static double barLineWidth(const BarLine* item, const MStyle& style, double dotW
 
 static void layoutBarLine(const BarLine* item, LayoutContext& ctx, BarLine::LayoutData* ldata)
 {
-    ldata->setPos(PointF());
+    ldata->resetPos();
 
     // barlines hidden on this staff
     if (item->staff() && item->segment()) {
@@ -805,7 +806,7 @@ void TLayout::layout2(BarLine* item, LayoutContext& ctx)
     if (item->staff() && item->segment()) {
         if ((!item->staff()->staffTypeForElement(item)->showBarlines() && item->segment()->segmentType() == SegmentType::EndBarLine)
             || (item->staff()->hideSystemBarLine() && item->segment()->segmentType() == SegmentType::BeginBarLine)) {
-            ldata->clearBbox();
+            ldata->resetBbox();
             return;
         }
     }
@@ -950,7 +951,7 @@ static void layoutBend(const Bend* item, const LayoutContext&, Bend::LayoutData*
     bb.adjust(-lw, -lw, lw, lw);
 
     ldata->setBbox(bb);
-    ldata->setPos(PointF());
+    ldata->resetPos();
 }
 
 void TLayout::layout(Bend* item, LayoutContext& ctx)
@@ -1655,7 +1656,7 @@ static void layoutFermata(const Fermata* item, const LayoutContext& ctx, Fermata
     ldata->setIsSkipDraw(false);
 
     Segment* s = item->segment();
-    ldata->setPos(PointF());
+    ldata->resetPos();
 
     if (item->isStyled(Pid::OFFSET)) {
         const_cast<Fermata*>(item)->setOffset(item->propertyDefault(Pid::OFFSET).value<PointF>());
@@ -4669,7 +4670,7 @@ void TLayout::layoutTextBase(const TextBase* item, const LayoutContext& ctx, Tex
         return;
     }
 
-    ldata->setPos(PointF());
+    ldata->resetPos();
 
     if (item->placeBelow()) {
         ldata->setPosY(item->staff() ? item->staff()->height() : 0.0);
@@ -4736,7 +4737,7 @@ void TLayout::layout1TextBase(const TextBase* item, const LayoutContext&, TextBa
             }
         }
     } else {
-        ldata->setPos(PointF());
+        ldata->resetPos();
     }
 
     if (item->align() == AlignV::BOTTOM) {

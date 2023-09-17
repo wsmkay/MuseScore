@@ -132,7 +132,7 @@ void ShortcutsRegister::mergeShortcuts(ShortcutList& shortcuts, const ShortcutLi
 
 void ShortcutsRegister::mergeAdditionalShortcuts(ShortcutList& shortcuts)
 {
-    for (const ShortcutList& additionalShortcuts : m_additionalShortcutsHash.values()) {
+    for (const auto& [context, additionalShortcuts] : m_additionalShortcutsMap) {
         mergeShortcuts(shortcuts, additionalShortcuts);
     }
 }
@@ -217,9 +217,7 @@ ShortcutList ShortcutsRegister::filterAndUpdateAdditionalShortcuts(const Shortcu
 {
     ShortcutList noAdditionalShortcuts = shortcuts;
 
-    for (const std::string& key : m_additionalShortcutsHash.keys()) {
-        ShortcutList& additionalShortcuts = m_additionalShortcutsHash[key];
-
+    for (auto& [context, additionalShortcuts] : m_additionalShortcutsMap) {
         for (Shortcut& shortcut : additionalShortcuts) {
             auto it = std::find(shortcuts.begin(), shortcuts.end(), shortcut.action);
             if (it != shortcuts.end()) {
@@ -364,9 +362,9 @@ Notification ShortcutsRegister::shortcutsChanged() const
 
 mu::Ret ShortcutsRegister::setAdditionalShortcuts(const std::string& context, const ShortcutList& shortcuts)
 {
-    m_additionalShortcutsHash[context] = shortcuts;
+    m_additionalShortcutsMap[context] = shortcuts;
 
-    mergeShortcuts(m_shortcuts, m_additionalShortcutsHash[context]);
+    mergeShortcuts(m_shortcuts, m_additionalShortcutsMap[context]);
     m_shortcutsChanged.notify();
 
     return make_ok();

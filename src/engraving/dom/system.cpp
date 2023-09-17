@@ -289,12 +289,11 @@ void System::setBracketsXPosition(const double xPosition)
             bool b1LastStaffInB2 = (b1->lastStaff() >= b2->firstStaff() && b1->lastStaff() <= b2->lastStaff());
             if (b1->column() > b2->column()
                 && (b1FirstStaffInB2 || b1LastStaffInB2)) {
-                xOffset += b2->layoutData()->bracketWidth();
+                xOffset += b2->width();
             }
         }
         // Set position
-        double x = xPosition - xOffset - b1->layoutData()->bracketWidth() + lineWidthCorrection;
-        b1->mutLayoutData()->setPosX(x);
+        b1->mutLayoutData()->setPosX(xPosition - xOffset - b1->width() + lineWidthCorrection);
     }
 }
 

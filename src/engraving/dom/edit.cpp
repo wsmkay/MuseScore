@@ -29,7 +29,6 @@
 #include "articulation.h"
 #include "barline.h"
 #include "beam.h"
-#include "box.h"
 #include "bracket.h"
 #include "breath.h"
 #include "chord.h"
@@ -75,6 +74,7 @@
 #include "system.h"
 #include "systemtext.h"
 #include "tempotext.h"
+#include "textframe.h"
 #include "textline.h"
 #include "tie.h"
 #include "tiemap.h"
@@ -4151,8 +4151,7 @@ MeasureBase* Score::insertMeasure(ElementType type, MeasureBase* beforeMeasure, 
                 }
             } else if (!measureInsert && tick == Fraction(0, 1)) {
                 // If inserting measure into an empty score, restore default C key signature
-                // and 4/4 time signature
-                score->restoreInitialKeySigAndTimeSig();
+                score->restoreInitialKeySig();
             }
 
             //
@@ -4231,7 +4230,7 @@ MeasureBase* Score::insertMeasure(ElementType type, MeasureBase* beforeMeasure, 
     return result;
 }
 
-void Score::restoreInitialKeySigAndTimeSig()
+void Score::restoreInitialKeySig()
 {
     bool concertPitch = style().styleB(Sid::concertPitch);
     static constexpr Fraction startTick = Fraction(0, 1);
@@ -4265,17 +4264,7 @@ void Score::restoreInitialKeySigAndTimeSig()
         undoAddElement(newKeySig);
 
         staff->setKey(Fraction(0, 1), keySigEvent);
-
-        Segment* timeSegment = firstMeas->undoGetSegment(SegmentType::TimeSig, startTick);
-        TimeSig* newTimeSig = Factory::createTimeSig(timeSegment);
-        newTimeSig->setTrack(staff->idx() * VOICES);
-        newTimeSig->setSig(Fraction(4, 4));
-        timeSegment->add(newTimeSig);
-        undoAddElement(newTimeSig);
     }
-
-    firstMeas->setTimesig(Fraction(4, 4));
-    firstMeas->setTicks(Fraction(4, 4));
 }
 
 //---------------------------------------------------------

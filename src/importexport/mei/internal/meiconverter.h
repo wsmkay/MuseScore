@@ -31,7 +31,6 @@
 #include "iengravingfontsprovider.h"
 
 #include "thirdparty/libmei/cmn.h"
-#include "thirdparty/libmei/cmnornaments.h"
 #include "thirdparty/libmei/harmony.h"
 #include "thirdparty/libmei/shared.h"
 
@@ -56,9 +55,6 @@ enum ElisionType {
     ElisionLast
 };
 
-// SMuFL in @glyph.auth
-#define SMUFL_AUTH "smufl"
-
 // The @type attribute for <pb> and <sb>
 #define BREAK_TYPE "mscore-manual"
 // The @type attribute prefix for indicating beam in <chord>, <note> or <rest>
@@ -77,52 +73,12 @@ enum ElisionType {
 #define MARKER_TYPE "mscore-marker-"
 // The @type attribute prefix for tempo inferring type in <tempo>
 #define TEMPO_INFER_FROM_TEXT "mscore-infer-from-text"
-// The @type attribute prefixes for ornament interval (above/below)
-#define INTERVAL_ABOVE "mscore-above-"
-#define INTERVAL_BELOW "mscore-below-"
 
 class Convert
 {
     // The fallback font is used to convert smufl codes (char32_t) to engraving::SymId
     INJECT_STATIC(engraving::IEngravingFontsProvider, engravingFonts)
-    INJECT_STATIC(engraving::IEngravingConfiguration, engravingConfiguration);
 public:
-
-    /**
-     * Structures for methods needing to return a group of variables
-     */
-
-    struct BracketStruct {
-        engraving::BracketType bracketType = engraving::BracketType::NO_BRACKET;
-        int barLineSpan = 0;
-    };
-
-    struct MeasureStruct {
-        bool irregular = false;
-        int n = 0;
-        bool repeatStart = false;
-        engraving::BarLineType endBarLineType = engraving::BarLineType::NORMAL;
-        bool repeatEnd = false;
-        int repeatCount = 0;
-    };
-
-    struct OrnamStruct {
-        engraving::AccidentalType accidTypeAbove = engraving::AccidentalType::NONE;
-        engraving::AccidentalType accidTypeBelow = engraving::AccidentalType::NONE;
-    };
-
-    struct StaffStruct {
-        int lines;
-        engraving::Interval interval;
-    };
-
-    struct PitchStruct {
-        int pitch = 0;
-        int tpc2 = 0;
-        engraving::AccidentalType accidType = engraving::AccidentalType::NONE;
-        engraving::AccidentalBracket accidBracket = engraving::AccidentalBracket::NONE;
-        engraving::AccidentalRole accidRole = engraving::AccidentalRole::AUTO;
-    };
 
     /**
      * Methods for checking which element to create depending on some attribute values of the MuseScore or MEI element
@@ -131,9 +87,6 @@ public:
     static engraving::ElementType elementTypeForDirWithExt(const libmei::Element& meiElement);
     static engraving::ElementType elementTypeFor(const libmei::RepeatMark& meiRepeatMark);
     static bool isDirWithExt(const libmei::Dir& meiDir);
-    static bool isMordent(const engraving::Ornament* ornament);
-    static bool isTrill(const engraving::Ornament* ornament);
-    static bool isTurn(const engraving::Ornament* ornament);
 
     /**
      * Methods for converting from and to MEI
@@ -145,9 +98,6 @@ public:
     static engraving::AccidentalVal accidGesFromMEI(const libmei::data_ACCIDENTAL_GESTURAL meiAccid, bool& warning);
     static libmei::data_ACCIDENTAL_GESTURAL accidGesToMEI(const engraving::AccidentalVal accid);
 
-    static engraving::ArticulationAnchor anchorFromMEI(const libmei::data_STAFFREL meiPlace, bool& warning);
-    static libmei::data_STAFFREL anchorToMEI(engraving::ArticulationAnchor anchor);
-
     static engraving::BarLineType barlineFromMEI(const libmei::data_BARRENDITION meiBarline, bool& warning);
     static libmei::data_BARRENDITION barlineToMEI(engraving::BarLineType barline);
 
@@ -157,7 +107,12 @@ public:
     static engraving::BeamMode breaksecFromMEI(int breaksec, bool& warning);
     static int breaksecToMEI(engraving::BeamMode beamMode);
 
-    static BracketStruct bracketFromMEI(const libmei::StaffGrp& meiStaffGrp);
+    struct BracketStruct {
+        engraving::BracketType bracketType = engraving::BracketType::NO_BRACKET;
+        int barLineSpan = 0;
+    };
+
+    static Convert::BracketStruct bracketFromMEI(const libmei::StaffGrp& meiStaffGrp);
     static libmei::StaffGrp bracketToMEI(const engraving::BracketType, int barLineSpan);
 
     static void breathFromMEI(engraving::Breath* breath, const libmei::Breath& meiBreath, bool& warning);
@@ -170,12 +125,6 @@ public:
     static libmei::Clef clefToMEI(engraving::ClefType clef);
 
     static engraving::ClefType clefFromMEI(const libmei::StaffDef& meiStaffDef, bool& warning);
-
-    static void colorFromMEI(engraving::EngravingItem* item, const libmei::Element& meiElement);
-    static void colorToMEI(const engraving::EngravingItem* item, libmei::Element& meiElement);
-
-    static void colorlineFromMEI(engraving::SLine* line, const libmei::Element& meiElement);
-    static void colorlineToMEI(const engraving::SLine* line, libmei::Element& meiElement);
 
     static void dirFromMEI(engraving::TextBase* textBase, const StringList& meiLines, const libmei::Dir& meiDir, bool& warning);
     static void dirFromMEI(engraving::TextLineBase* textLineBase, const StringList& meiLines, const libmei::Dir& meiDir, bool& warning);
@@ -219,6 +168,15 @@ public:
     static void markerFromMEI(engraving::Marker* marker, const libmei::RepeatMark& meiRepeatMark, bool& warning);
     static libmei::RepeatMark markerToMEI(const engraving::Marker* marker, String& text);
 
+    struct MeasureStruct {
+        bool irregular = false;
+        int n = 0;
+        bool repeatStart = false;
+        engraving::BarLineType endBarLineType = engraving::BarLineType::NORMAL;
+        bool repeatEnd = false;
+        int repeatCount = 0;
+    };
+
     static MeasureStruct measureFromMEI(const libmei::Measure& meiMeasure, bool& warning);
     static libmei::Measure measureToMEI(const engraving::Measure* measure, int& measureN, bool& isLastIrregular);
 
@@ -226,18 +184,16 @@ public:
     static std::pair<engraving::Fraction, engraving::TimeSigType> meterFromMEI(const libmei::StaffDef& meiStaffDef, bool& warning);
     static libmei::StaffDef meterToMEI(const engraving::Fraction& fraction, engraving::TimeSigType tsType);
 
-    static OrnamStruct mordentFromMEI(engraving::Ornament* ornament, const libmei::Mordent& meiMordent, bool& warning);
-    static libmei::Mordent mordentToMEI(const engraving::Ornament* ornament);
-
     static void octaveFromMEI(engraving::Ottava* ottava, const libmei::Octave& meiOctave, bool& warning);
     static libmei::Octave octaveToMEI(const engraving::Ottava* ottava);
 
-    static OrnamStruct ornamFromMEI(engraving::Ornament* ornament, const libmei::Element& meiElement, bool& warning);
-    static libmei::Ornam ornamToMEI(const engraving::Ornament* ornament);
-    static void ornamToMEI(const engraving::Ornament* ornament, libmei::Element& meiElement);
-
-    static void ornamintervaleFromMEI(engraving::Ornament* ornament, const std::string& meiType);
-    static String ornamintervalToMEI(const engraving::Ornament* ornament);
+    struct PitchStruct {
+        int pitch = 0;
+        int tpc2 = 0;
+        engraving::AccidentalType accidType = engraving::AccidentalType::NONE;
+        engraving::AccidentalBracket accidBracket = engraving::AccidentalBracket::NONE;
+        engraving::AccidentalRole accidRole = engraving::AccidentalRole::AUTO;
+    };
 
     static PitchStruct pitchFromMEI(const libmei::Note& meiNote, const libmei::Accid& meiAccid, const engraving::Interval& interval,
                                     bool& warning);
@@ -252,6 +208,11 @@ public:
 
     static engraving::SlurStyleType slurstyleFromMEI(const libmei::data_LINEFORM meiLine, bool& warning);
     static libmei::data_LINEFORM slurstyleToMEI(engraving::SlurStyleType slurstyle);
+
+    struct StaffStruct {
+        int lines;
+        engraving::Interval interval;
+    };
 
     static StaffStruct staffFromMEI(const libmei::StaffDef& meiStaffDef, bool& warning);
     static libmei::StaffDef staffToMEI(const engraving::Staff* staff);
@@ -276,20 +237,13 @@ public:
     static void tieFromMEI(engraving::SlurTie* tie, const libmei::Tie& meiTie, bool& warning);
     static libmei::Tie tieToMEI(const engraving::SlurTie* tie);
 
-    static OrnamStruct trillFromMEI(engraving::Ornament* ornament, const libmei::Trill& meiTrill, bool& warning);
-    static libmei::Trill trillToMEI(const engraving::Ornament* ornament);
-
     static void tupletFromMEI(engraving::Tuplet* tuplet, const libmei::Tuplet& meiTuplet, bool& warning);
     static libmei::Tuplet tupletToMEI(const engraving::Tuplet* tuplet);
-
-    static OrnamStruct turnFromMEI(engraving::Ornament* ornament, const libmei::Turn& meiTurn, bool& warning);
-    static libmei::Turn turnToMEI(const engraving::Ornament* ornament);
 
     /**
      * Helper methods
      */
     static bool hasTypeValue(const std::string& typeStr, const std::string& value);
-    static bool getTypeValueWithPrefix(const std::string& typeStr, const std::string& prefix, std::string& value);
     static std::list<std::string> getTypeValuesWithPrefix(const std::string& typeStr, const std::string& prefix);
     static double tstampFromFraction(const engraving::Fraction& fraction, const engraving::Fraction& timesig);
     static engraving::Fraction tstampToFraction(double tstamp, const engraving::Fraction& timesig);
@@ -317,18 +271,6 @@ private:
         { engraving::JumpType::DSS_AL_CODA, "dss-al-coda" },
         { engraving::JumpType::DSS_AL_DBLCODA, "dss-al-double-coda" },
         { engraving::JumpType::DSS_AL_FINE, "dss-al-fine" }
-    };
-
-    /** Since MuseScore uses composed glyph - see EngravingFont::loadComposedGlyphs */
-    static inline std::map<engraving::SymId, std::string> s_mordentGlyphs = {
-        { engraving::SymId::ornamentPrallMordent, "ornamentPrecompTrillWithMordent" },
-        { engraving::SymId::ornamentUpPrall, "ornamentPrecompSlideTrillDAnglebert" },
-        { engraving::SymId::ornamentUpMordent, "ornamentPrecompSlideTrillBach" },
-        { engraving::SymId::ornamentPrallDown, "ornamentPrecompTrillLowerSuffix" },
-        { engraving::SymId::ornamentDownMordent, "ornamentPrecompTurnTrillBach" },
-        { engraving::SymId::ornamentPrallUp, "ornamentPrecompTrillSuffixDandrieu" },
-        { engraving::SymId::ornamentLinePrall, "ornamentPrecompAppoggTrill" },
-        { engraving::SymId::ornamentPrecompSlide, "ornamentSchleifer" }
     };
 };
 

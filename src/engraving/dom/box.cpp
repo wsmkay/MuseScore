@@ -32,6 +32,7 @@
 #include "stafftext.h"
 #include "system.h"
 #include "text.h"
+#include "textframe.h"
 
 #include "log.h"
 
@@ -93,21 +94,21 @@ void Box::startEditDrag(EditData& ed)
 void Box::editDrag(EditData& ed)
 {
     if (isVBox()) {
-        m_boxHeight += Spatium(ed.delta.y() / spatium());
+        _boxHeight += Spatium(ed.delta.y() / spatium());
         if (ed.vRaster) {
             double vRaster = 1.0 / MScore::vRaster();
-            int n = lrint(m_boxHeight.val() / vRaster);
-            m_boxHeight = Spatium(vRaster * n);
+            int n = lrint(_boxHeight.val() / vRaster);
+            _boxHeight = Spatium(vRaster * n);
         }
         mutLayoutData()->setBbox(0.0, 0.0, system()->width(), point(boxHeight()));
         system()->setHeight(height());
         triggerLayout();
     } else {
-        m_boxWidth += Spatium(ed.delta.x() / spatium());
+        _boxWidth += Spatium(ed.delta.x() / spatium());
         if (ed.hRaster) {
             double hRaster = 1.0 / MScore::hRaster();
-            int n = lrint(m_boxWidth.val() / hRaster);
-            m_boxWidth = Spatium(hRaster * n);
+            int n = lrint(_boxWidth.val() / hRaster);
+            _boxWidth = Spatium(hRaster * n);
         }
         triggerLayout();
     }
@@ -168,23 +169,23 @@ PropertyValue Box::getProperty(Pid propertyId) const
 {
     switch (propertyId) {
     case Pid::BOX_HEIGHT:
-        return m_boxHeight;
+        return _boxHeight;
     case Pid::BOX_WIDTH:
-        return m_boxWidth;
+        return _boxWidth;
     case Pid::TOP_GAP:
-        return m_topGap;
+        return _topGap;
     case Pid::BOTTOM_GAP:
-        return m_bottomGap;
+        return _bottomGap;
     case Pid::LEFT_MARGIN:
-        return m_leftMargin;
+        return _leftMargin;
     case Pid::RIGHT_MARGIN:
-        return m_rightMargin;
+        return _rightMargin;
     case Pid::TOP_MARGIN:
-        return m_topMargin;
+        return _topMargin;
     case Pid::BOTTOM_MARGIN:
-        return m_bottomMargin;
+        return _bottomMargin;
     case Pid::BOX_AUTOSIZE:
-        return (score()->mscVersion() >= 302) ? m_isAutoSizeEnabled : false;
+        return (score()->mscVersion() >= 302) ? _isAutoSizeEnabled : false;
     default:
         return MeasureBase::getProperty(propertyId);
     }
@@ -199,31 +200,31 @@ bool Box::setProperty(Pid propertyId, const PropertyValue& v)
     score()->addRefresh(canvasBoundingRect(LD_ACCESS::BAD));
     switch (propertyId) {
     case Pid::BOX_HEIGHT:
-        m_boxHeight = v.value<Spatium>();
+        _boxHeight = v.value<Spatium>();
         break;
     case Pid::BOX_WIDTH:
-        m_boxWidth = v.value<Spatium>();
+        _boxWidth = v.value<Spatium>();
         break;
     case Pid::TOP_GAP:
-        m_topGap = v.value<Millimetre>();
+        _topGap = v.value<Millimetre>();
         break;
     case Pid::BOTTOM_GAP:
-        m_bottomGap = v.value<Millimetre>();
+        _bottomGap = v.value<Millimetre>();
         break;
     case Pid::LEFT_MARGIN:
-        m_leftMargin = v.toDouble();
+        _leftMargin = v.toDouble();
         break;
     case Pid::RIGHT_MARGIN:
-        m_rightMargin = v.toDouble();
+        _rightMargin = v.toDouble();
         break;
     case Pid::TOP_MARGIN:
-        m_topMargin = v.toDouble();
+        _topMargin = v.toDouble();
         break;
     case Pid::BOTTOM_MARGIN:
-        m_bottomMargin = v.toDouble();
+        _bottomMargin = v.toDouble();
         break;
     case Pid::BOX_AUTOSIZE:
-        m_isAutoSizeEnabled = v.toBool();
+        _isAutoSizeEnabled = v.toBool();
         break;
     default:
         return MeasureBase::setProperty(propertyId, v);
@@ -266,16 +267,16 @@ PropertyValue Box::propertyDefault(Pid id) const
 
 void Box::copyValues(Box* origin)
 {
-    m_boxHeight    = origin->boxHeight();
-    m_boxWidth     = origin->boxWidth();
+    _boxHeight    = origin->boxHeight();
+    _boxWidth     = origin->boxWidth();
 
     double factor  = magS() / origin->magS();
-    m_bottomGap    = origin->bottomGap() * factor;
-    m_topGap       = origin->topGap() * factor;
-    m_bottomMargin = origin->bottomMargin() * factor;
-    m_topMargin    = origin->topMargin() * factor;
-    m_leftMargin   = origin->leftMargin() * factor;
-    m_rightMargin  = origin->rightMargin() * factor;
+    _bottomGap    = origin->bottomGap() * factor;
+    _topGap       = origin->topGap() * factor;
+    _bottomMargin = origin->bottomMargin() * factor;
+    _topMargin    = origin->topMargin() * factor;
+    _leftMargin   = origin->leftMargin() * factor;
+    _rightMargin  = origin->rightMargin() * factor;
 }
 
 //---------------------------------------------------------
@@ -560,85 +561,6 @@ void FBox::add(EngravingItem* e)
     }
     el().push_back(e);
     e->added();
-}
-
-//---------------------------------------------------------
-//   TBox
-//---------------------------------------------------------
-
-TBox::TBox(System* parent)
-    : VBox(ElementType::TBOX, parent)
-{
-    setBoxHeight(Spatium(1));
-    m_text  = Factory::createText(this, TextStyleType::FRAME);
-    m_text->setLayoutToParentWidth(true);
-    m_text->setParent(this);
-}
-
-TBox::TBox(const TBox& tbox)
-    : VBox(tbox)
-{
-    m_text = Factory::copyText(*(tbox.m_text));
-}
-
-TBox::~TBox()
-{
-    delete m_text;
-}
-
-//---------------------------------------------------------
-//   drop
-//---------------------------------------------------------
-
-EngravingItem* TBox::drop(EditData& data)
-{
-    EngravingItem* e = data.dropElement;
-    switch (e->type()) {
-    case ElementType::TEXT:
-        m_text->undoChangeProperty(Pid::TEXT, toText(e)->xmlText());
-        delete e;
-        return m_text;
-    default:
-        return VBox::drop(data);
-    }
-}
-
-//---------------------------------------------------------
-//   add
-///   Add new EngravingItem \a el to TBox
-//---------------------------------------------------------
-
-void TBox::add(EngravingItem* e)
-{
-    if (e->isText()) {
-        // does not normally happen, since drop() handles this directly
-        m_text->undoChangeProperty(Pid::TEXT, toText(e)->xmlText());
-        e->setParent(this);
-        e->added();
-    } else {
-        VBox::add(e);
-    }
-}
-
-//---------------------------------------------------------
-//   remove
-//---------------------------------------------------------
-
-void TBox::remove(EngravingItem* el)
-{
-    if (el == m_text) {
-        // does not normally happen, since Score::deleteItem() handles this directly
-        // but if it does:
-        // replace with new empty text element
-        // this keeps undo/redo happier than just clearing the text
-        LOGD("TBox::remove() - replacing _text");
-        m_text = Factory::createText(this, TextStyleType::FRAME);
-        m_text->setLayoutToParentWidth(true);
-        m_text->setParent(this);
-        el->removed();
-    } else {
-        VBox::remove(el);
-    }
 }
 
 //---------------------------------------------------------

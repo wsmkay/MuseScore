@@ -86,7 +86,7 @@ void MeasureLayout::layout2(Measure* item, LayoutContext& ctx)
     }
 
     // layout LAYOUT_BREAK elements
-    TLayout::layoutMeasureBase(item, item->mutLayoutData(), ctx);
+    TLayout::layoutMeasureBase(item, ctx);
 
     //---------------------------------------------------
     //    layout ties
@@ -384,7 +384,7 @@ void MeasureLayout::createMMRest(LayoutContext& ctx, Measure* firstMeasure, Meas
                     ctx.mutDom().undo(new AddElement(mmrAmbitus));
                 } else {
                     mmrAmbitus->initFrom(underlyingAmbitus);
-                    TLayout::layout(mmrAmbitus, mmrAmbitus->mutLayoutData(), ctx);
+                    TLayout::layout(mmrAmbitus, ctx);
                 }
             }
         }
@@ -981,7 +981,7 @@ void MeasureLayout::getNextMeasure(LayoutContext& ctx)
             BarLine* b = toBarLine(seg->element(staffIdx * VOICES));
             if (b) {
                 b->setBarLineType(BarLineType::START_REPEAT);
-                TLayout::layout(b, b->mutLayoutData(), ctx);
+                TLayout::layout(b, ctx);
             }
         }
     } else if (seg) {
@@ -1346,7 +1346,7 @@ void MeasureLayout::barLinesSetSpan(Segment* seg, LayoutContext& ctx)
             bl->setSpanStaff(staff->barLineSpan());
             bl->setSpanFrom(staff->barLineFrom());
             bl->setSpanTo(staff->barLineTo());
-            TLayout::layout(bl, bl->mutLayoutData(), ctx);
+            TLayout::layout(bl, ctx);
             ctx.mutDom().addElement(bl);
         }
         track += VOICES;
@@ -1457,7 +1457,7 @@ double MeasureLayout::createEndBarLines(Measure* m, bool isLastMeasureInSystem, 
                 }
             }
 
-            TLayout::layout(bl, bl->mutLayoutData(), ctx);
+            TLayout::layout(bl, ctx);
             blw = std::max(blw, bl->width());
         }
         // right align within segment
@@ -1499,7 +1499,7 @@ double MeasureLayout::createEndBarLines(Measure* m, bool isLastMeasureInSystem, 
                         visibleInt = 1;
                     }
                 } else {
-                    TLayout::layout(clef, clef->mutLayoutData());
+                    TLayout::layout(clef, ctx);
                     clefSeg->createShape(staffIdx);
                     visibleInt = 2;
                 }
@@ -1603,7 +1603,7 @@ void MeasureLayout::addSystemHeader(Measure* m, bool isFirstSystem, LayoutContex
                     clef->setClefType(cl);
                 }
                 clef->setSmall(false);
-                TLayout::layout(clef, clef->mutLayoutData());
+                TLayout::layout(clef, ctx);
             } else if (clef) {
                 clef->parentItem()->remove(clef);
                 if (clef->generated()) {
@@ -1902,7 +1902,7 @@ void MeasureLayout::createSystemBeginBarLine(Measure* m, LayoutContext& ctx)
                 s->add(bl);
             }
 
-            TLayout::layout(bl, bl->mutLayoutData(), ctx);
+            TLayout::layout(bl, ctx);
         }
         s->createShapes();
         s->setEnabled(true);

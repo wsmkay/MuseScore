@@ -44,7 +44,6 @@
 
 #include "engraving/dom/actionicon.h"
 #include "engraving/dom/articulation.h"
-#include "engraving/dom/box.h"
 #include "engraving/dom/bracket.h"
 #include "engraving/dom/chord.h"
 #include "engraving/dom/drumset.h"
@@ -73,6 +72,7 @@
 #include "engraving/dom/stafftypechange.h"
 #include "engraving/dom/system.h"
 #include "engraving/dom/textedit.h"
+#include "engraving/dom/textframe.h"
 #include "engraving/dom/tuplet.h"
 #include "engraving/dom/undo.h"
 #include "engraving/compat/dummyelement.h"
@@ -80,9 +80,9 @@
 #include "engraving/rw/xmlreader.h"
 #include "engraving/rw/rwregister.h"
 
+#include "masternotation.h"
 #include "mscoreerrorscontroller.h"
 #include "notationerrors.h"
-#include "notation.h"
 #include "notationnoteinput.h"
 #include "notationselection.h"
 #include "scorecallbacks.h"
@@ -1152,7 +1152,7 @@ void NotationInteraction::startDrop(const QByteArray& edata)
 
     EngravingItem* el = engraving::Factory::createItem(type, score()->dummy());
     if (el) {
-        if (type == ElementType::BAR_LINE || type == ElementType::BRACKET) {
+        if (type == ElementType::BAR_LINE || type == ElementType::ARPEGGIO || type == ElementType::BRACKET) {
             double spatium = score()->style().spatium();
             el->setHeight(spatium * 5);
         }

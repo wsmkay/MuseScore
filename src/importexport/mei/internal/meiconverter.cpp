@@ -42,7 +42,6 @@
 #include "engraving/dom/measure.h"
 #include "engraving/dom/note.h"
 #include "engraving/dom/ottava.h"
-#include "engraving/dom/ornament.h"
 #include "engraving/dom/part.h"
 #include "engraving/dom/pitchspelling.h"
 #include "engraving/dom/slurtie.h"
@@ -99,53 +98,6 @@ engraving::ElementType Convert::elementTypeFor(const libmei::RepeatMark& meiRepe
 bool Convert::isDirWithExt(const libmei::Dir& meiDir)
 {
     return meiDir.HasExtender() && (meiDir.GetExtender() == libmei::BOOLEAN_true);
-}
-
-bool Convert::isMordent(const engraving::Ornament* ornament)
-{
-    switch (ornament->symId()) {
-    case engraving::SymId::ornamentMordent:
-    case engraving::SymId::ornamentShortTrill:
-    case engraving::SymId::ornamentTremblement:
-    case engraving::SymId::ornamentPrallMordent:
-    case engraving::SymId::ornamentUpPrall:
-    case engraving::SymId::ornamentPrecompMordentUpperPrefix:
-    case engraving::SymId::ornamentUpMordent:
-    case engraving::SymId::ornamentDownMordent:
-    case engraving::SymId::ornamentPrallDown:
-    case engraving::SymId::ornamentPrallUp:
-    case engraving::SymId::ornamentLinePrall:
-    case engraving::SymId::ornamentPrecompSlide:
-    case engraving::SymId::ornamentTremblementCouperin:
-    case engraving::SymId::ornamentPinceCouperin:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool Convert::isTrill(const engraving::Ornament* ornament)
-{
-    switch (ornament->symId()) {
-    case engraving::SymId::ornamentTrill:
-    case engraving::SymId::ornamentShake3:
-    case engraving::SymId::ornamentShakeMuffat1:
-        return true;
-    default:
-        return false;
-    }
-}
-
-bool Convert::isTurn(const engraving::Ornament* ornament)
-{
-    switch (ornament->symId()) {
-    case engraving::SymId::ornamentTurnInverted:
-    case engraving::SymId::ornamentTurnSlash:
-    case engraving::SymId::ornamentTurn:
-        return true;
-    default:
-        return false;
-    }
 }
 
 engraving::AccidentalType Convert::accidFromMEI(const libmei::data_ACCIDENTAL_WRITTEN meiAccid, bool& warning)
@@ -218,27 +170,6 @@ libmei::data_ACCIDENTAL_GESTURAL Convert::accidGesToMEI(const engraving::Acciden
     case (engraving::AccidentalVal::SHARP3): return libmei::ACCIDENTAL_GESTURAL_ts;
     default:
         return libmei::ACCIDENTAL_GESTURAL_n;
-    }
-}
-
-engraving::ArticulationAnchor Convert::anchorFromMEI(const libmei::data_STAFFREL meiPlace, bool& warning)
-{
-    warning = false;
-    switch (meiPlace) {
-    case (libmei::STAFFREL_above): return engraving::ArticulationAnchor::TOP;
-    case (libmei::STAFFREL_below): return engraving::ArticulationAnchor::BOTTOM;
-    default:
-        return engraving::ArticulationAnchor::AUTO;
-    }
-}
-
-libmei::data_STAFFREL Convert::anchorToMEI(engraving::ArticulationAnchor anchor)
-{
-    switch (anchor) {
-    case (engraving::ArticulationAnchor::TOP): return libmei::STAFFREL_above;
-    case (engraving::ArticulationAnchor::BOTTOM): return libmei::STAFFREL_below;
-    default:
-        return libmei::STAFFREL_NONE;
     }
 }
 
@@ -479,7 +410,7 @@ void Convert::breathFromMEI(engraving::Breath* breath, const libmei::Breath& mei
     warning = false;
 
     // @glyhp.name
-    bool smufl = (meiBreath.HasGlyphAuth() && (meiBreath.GetGlyphAuth() == SMUFL_AUTH));
+    bool smufl = (meiBreath.HasGlyphAuth() && (meiBreath.GetGlyphAuth() == "smufl"));
 
     engraving::SymId symId = engraving::SymId::breathMarkComma;
 
@@ -496,9 +427,6 @@ void Convert::breathFromMEI(engraving::Breath* breath, const libmei::Breath& mei
             warning = true;
         }
     }
-
-    // @color
-    Convert::colorFromMEI(breath, meiBreath);
 
     breath->setSymId(symId);
 }
@@ -520,11 +448,8 @@ libmei::Breath Convert::breathToMEI(const engraving::Breath* breath)
     if (smufl) {
         AsciiStringView glyphName = engraving::SymNames::nameForSymId(breath->symId());
         meiBreath.SetGlyphName(glyphName.ascii());
-        meiBreath.SetGlyphAuth(SMUFL_AUTH);
+        meiBreath.SetGlyphAuth("smufl");
     }
-
-    // @color
-    Convert::colorToMEI(breath, meiBreath);
 
     return meiBreath;
 }
@@ -534,7 +459,7 @@ void Convert::caesuraFromMEI(engraving::Breath* breath, const libmei::Caesura& m
     warning = false;
 
     // @glyhp.name
-    bool smufl = (meiCeasura.HasGlyphAuth() && (meiCeasura.GetGlyphAuth() == SMUFL_AUTH));
+    bool smufl = (meiCeasura.HasGlyphAuth() && (meiCeasura.GetGlyphAuth() == "smufl"));
 
     engraving::SymId symId = engraving::SymId::caesura;
 
@@ -551,9 +476,6 @@ void Convert::caesuraFromMEI(engraving::Breath* breath, const libmei::Caesura& m
             warning = true;
         }
     }
-
-    // @color
-    Convert::colorFromMEI(breath, meiCeasura);
 
     breath->setSymId(symId);
 }
@@ -577,11 +499,8 @@ libmei::Caesura Convert::caesuraToMEI(const engraving::Breath* breath)
     if (smufl) {
         AsciiStringView glyphName = engraving::SymNames::nameForSymId(breath->symId());
         meiCaesura.SetGlyphName(glyphName.ascii());
-        meiCaesura.SetGlyphAuth(SMUFL_AUTH);
+        meiCaesura.SetGlyphAuth("smufl");
     }
-
-    // @color
-    Convert::colorToMEI(breath, meiCaesura);
 
     return meiCaesura;
 }
@@ -673,70 +592,6 @@ engraving::ClefType Convert::clefFromMEI(const libmei::StaffDef& meiStaffDef, bo
     meiClef.SetDis(meiStaffDef.GetClefDis());
     meiClef.SetDisPlace(meiStaffDef.GetClefDisPlace());
     return Convert::clefFromMEI(meiClef, warning);
-}
-
-void Convert::colorFromMEI(engraving::EngravingItem* item, const libmei::Element& meiElement)
-{
-    const libmei::AttColor* colorAtt = dynamic_cast<const libmei::AttColor*>(&meiElement);
-
-    IF_ASSERT_FAILED(colorAtt) {
-        return;
-    }
-
-    // @color
-    if (colorAtt->HasColor()) {
-        engraving::Color color = engraving::Color::fromString(colorAtt->GetColor());
-        if (color.isValid()) {
-            item->setColor(color);
-            item->setPropertyFlags(engraving::Pid::COLOR, engraving::PropertyFlags::UNSTYLED);
-        }
-    }
-}
-
-void Convert::colorToMEI(const engraving::EngravingItem* item, libmei::Element& meiElement)
-{
-    libmei::AttColor* colorAtt = dynamic_cast<libmei::AttColor*>(&meiElement);
-
-    IF_ASSERT_FAILED(colorAtt) {
-        return;
-    }
-
-    // @color
-    if (item->color() != engravingConfiguration()->defaultColor()) {
-        colorAtt->SetColor(item->color().toString());
-    }
-}
-
-void Convert::colorlineFromMEI(engraving::SLine* line, const libmei::Element& meiElement)
-{
-    const libmei::AttColor* colorAtt = dynamic_cast<const libmei::AttColor*>(&meiElement);
-
-    IF_ASSERT_FAILED(colorAtt) {
-        return;
-    }
-
-    // @color
-    if (colorAtt->HasColor()) {
-        engraving::Color color = engraving::Color::fromString(colorAtt->GetColor());
-        if (color.isValid()) {
-            line->setLineColor(color);
-            line->setPropertyFlags(engraving::Pid::COLOR, engraving::PropertyFlags::UNSTYLED);
-        }
-    }
-}
-
-void Convert::colorlineToMEI(const engraving::SLine* line, libmei::Element& meiElement)
-{
-    libmei::AttColor* colorAtt = dynamic_cast<libmei::AttColor*>(&meiElement);
-
-    IF_ASSERT_FAILED(colorAtt) {
-        return;
-    }
-
-    // @color
-    if (line->lineColor() != engravingConfiguration()->defaultColor()) {
-        colorAtt->SetColor(line->lineColor().toString());
-    }
 }
 
 engraving::DirectionV Convert::curvedirFromMEI(const libmei::curvature_CURVEDIR meiCurvedir, bool& warning)
@@ -1131,7 +986,7 @@ void Convert::fermataFromMEI(engraving::Fermata* fermata, const libmei::Fermata&
     bool below = (meiFermata.HasPlace() && (meiFermata.GetPlace() == libmei::STAFFREL_below));
 
     // @glyhp.name
-    bool smufl = (meiFermata.HasGlyphAuth() && (meiFermata.GetGlyphAuth() == SMUFL_AUTH));
+    bool smufl = (meiFermata.HasGlyphAuth() && (meiFermata.GetGlyphAuth() == "smufl"));
 
     engraving::SymId symId = engraving::SymId::fermataAbove;
 
@@ -1163,9 +1018,6 @@ void Convert::fermataFromMEI(engraving::Fermata* fermata, const libmei::Fermata&
     if (below) {
         fermata->setPlacement(engraving::PlacementV::BELOW);
     }
-
-    // @color
-    Convert::colorFromMEI(fermata, meiFermata);
 }
 
 libmei::Fermata Convert::fermataToMEI(const engraving::Fermata* fermata)
@@ -1211,11 +1063,8 @@ libmei::Fermata Convert::fermataToMEI(const engraving::Fermata* fermata)
     if (smufl) {
         AsciiStringView glyphName = engraving::SymNames::nameForSymId(fermata->symId());
         meiFermata.SetGlyphName(glyphName.ascii());
-        meiFermata.SetGlyphAuth(SMUFL_AUTH);
+        meiFermata.SetGlyphAuth("smufl");
     }
-
-    // @color
-    Convert::colorToMEI(fermata, meiFermata);
 
     return meiFermata;
 }
@@ -1275,9 +1124,6 @@ void Convert::hairpinFromMEI(engraving::Hairpin* hairpin, const libmei::Hairpin&
         hairpin->setPropertyFlags(engraving::Pid::LINE_STYLE, engraving::PropertyFlags::UNSTYLED);
         warning = (warning || lformWarning);
     }
-
-    // @color
-    Convert::colorlineFromMEI(hairpin, meiHairpin);
 }
 
 libmei::Hairpin Convert::hairpinToMEI(const engraving::Hairpin* hairpin)
@@ -1300,9 +1146,6 @@ libmei::Hairpin Convert::hairpinToMEI(const engraving::Hairpin* hairpin)
     if (hairpin->lineStyle() != engraving::LineType::SOLID) {
         meiHairpin.SetLform(Convert::lineToMEI(hairpin->lineStyle()));
     }
-
-    // @color
-    Convert::colorlineToMEI(hairpin, meiHairpin);
 
     return meiHairpin;
 }
@@ -1710,127 +1553,6 @@ libmei::StaffDef Convert::meterToMEI(const engraving::Fraction& fraction, engrav
     return meiStaffDef;
 }
 
-Convert::OrnamStruct Convert::mordentFromMEI(engraving::Ornament* ornament, const libmei::Mordent& meiMordent, bool& warning)
-{
-    // @glyhp.name
-    bool smufl = (meiMordent.HasGlyphAuth() && (meiMordent.GetGlyphAuth() == SMUFL_AUTH));
-
-    engraving::SymId symId = engraving::SymId::ornamentMordent;
-
-    // We give @glyph.name (or @glyph.num) priority over @form and @long
-    if (smufl && meiMordent.HasGlyphName()) {
-        // Check if the @glyph.name needs to be mapped to a composite glyph
-        std::string value = meiMordent.GetGlyphName();
-        auto result = std::find_if(Convert::s_mordentGlyphs.begin(), Convert::s_mordentGlyphs.end(),
-                                   [value](const auto& entry) { return entry.second == value; });
-        if (result != Convert::s_mordentGlyphs.end()) {
-            symId = result->first;
-            // Otherwise get the symId from the @glyph.name
-        } else {
-            symId = engraving::SymNames::symIdByName(String(meiMordent.GetGlyphName().c_str()));
-        }
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    }
-    // This is for loading MEI files not written by MuseScore and that use @glyph.num instead of @glyph.name
-    else if (smufl && meiMordent.HasGlyphNum()) {
-        symId = engravingFonts()->fallbackFont()->fromCode(meiMordent.GetGlyphNum());
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    }
-    // @form and @long only
-    else {
-        bool isLower = (meiMordent.HasForm() && (meiMordent.GetForm() == libmei::mordentLog_FORM_lower));
-        bool isLong = (meiMordent.HasLong() && (meiMordent.GetLong() == libmei::BOOLEAN_true));
-        if (isLower && isLong) {
-            symId = engraving::SymId::ornamentPrallMordent;
-        } else if (isLower && !isLong) {
-            symId = engraving::SymId::ornamentMordent;
-        } else if (!isLower && isLong) {
-            symId = engraving::SymId::ornamentTremblement;
-        } else {
-            symId = engraving::SymId::ornamentShortTrill;
-        }
-    }
-
-    ornament->setSymId(symId);
-
-    // Other attributes
-    return Convert::ornamFromMEI(ornament, meiMordent, warning);
-}
-
-libmei::Mordent Convert::mordentToMEI(const engraving::Ornament* ornament)
-{
-    libmei::Mordent meiMordent;
-
-    Convert::ornamToMEI(ornament, meiMordent);
-
-    // @form
-    switch (ornament->symId()) {
-    case (engraving::SymId::ornamentMordent):
-    case engraving::SymId::ornamentPrallMordent:
-    case engraving::SymId::ornamentUpMordent:
-    case engraving::SymId::ornamentDownMordent:
-        meiMordent.SetForm(libmei::mordentLog_FORM_lower);
-        break;
-    case engraving::SymId::ornamentShortTrill:
-    case engraving::SymId::ornamentTremblement:
-    case engraving::SymId::ornamentUpPrall:
-    case engraving::SymId::ornamentPrecompMordentUpperPrefix:
-    case engraving::SymId::ornamentPrallDown:
-    case engraving::SymId::ornamentPrallUp:
-    case engraving::SymId::ornamentLinePrall:
-        meiMordent.SetForm(libmei::mordentLog_FORM_upper);
-        break;
-    default:
-        break;
-    }
-
-    // @long
-    switch (ornament->symId()) {
-    case engraving::SymId::ornamentTremblement:
-    case engraving::SymId::ornamentPrallMordent:
-    case engraving::SymId::ornamentUpPrall:
-    case engraving::SymId::ornamentPrecompMordentUpperPrefix:
-    case engraving::SymId::ornamentUpMordent:
-    case engraving::SymId::ornamentDownMordent:
-    case engraving::SymId::ornamentPrallDown:
-    case engraving::SymId::ornamentPrallUp:
-    case engraving::SymId::ornamentLinePrall:
-        meiMordent.SetLong(libmei::BOOLEAN_true);
-        break;
-    default:
-        break;
-    }
-
-    // glyph.name
-    bool smufl = true;
-    switch (ornament->symId()) {
-    case (engraving::SymId::ornamentMordent):
-    case engraving::SymId::ornamentShortTrill:
-    case engraving::SymId::ornamentTremblement:
-    case engraving::SymId::ornamentPrallMordent:
-        smufl = false;
-        break;
-    default:
-        break;
-    }
-    if (smufl) {
-        // For glyph with composite glyphs in MuseScore use the values in the Convert map
-        if (s_mordentGlyphs.count(ornament->symId())) {
-            meiMordent.SetGlyphName(s_mordentGlyphs.at(ornament->symId()));
-        } else {
-            AsciiStringView glyphName = engraving::SymNames::nameForSymId(ornament->symId());
-            meiMordent.SetGlyphName(glyphName.ascii());
-        }
-        meiMordent.SetGlyphAuth(SMUFL_AUTH);
-    }
-
-    return meiMordent;
-}
-
 void Convert::octaveFromMEI(engraving::Ottava* ottava, const libmei::Octave& meiOctave, bool& warning)
 {
     warning = false;
@@ -1869,9 +1591,6 @@ void Convert::octaveFromMEI(engraving::Ottava* ottava, const libmei::Octave& mei
     if (meiOctave.HasLendsym() && (meiOctave.GetLendsym() == libmei::LINESTARTENDSYMBOL_none)) {
         ottava->setEndHookType(engraving::HookType::NONE);
     }
-
-    // @color
-    Convert::colorlineFromMEI(ottava, meiOctave);
 }
 
 libmei::Octave Convert::octaveToMEI(const engraving::Ottava* ottava)
@@ -1918,139 +1637,10 @@ libmei::Octave Convert::octaveToMEI(const engraving::Ottava* ottava)
         meiOctave.SetLendsym(libmei::LINESTARTENDSYMBOL_none);
     }
 
-    // @color
-    Convert::colorlineToMEI(ottava, meiOctave);
-
     return meiOctave;
 }
 
-Convert::OrnamStruct Convert::ornamFromMEI(engraving::Ornament* ornament, const libmei::Element& meiElement, bool& warning)
-{
-    OrnamStruct ornamSt;
-
-    const libmei::AttOrnamentAccid* ornamAccidAtt = dynamic_cast<const libmei::AttOrnamentAccid*>(&meiElement);
-    const libmei::AttPlacementRelStaff* placementRelStaffAtt = dynamic_cast<const libmei::AttPlacementRelStaff*>(&meiElement);
-    const libmei::AttTyped* typedAtt = dynamic_cast<const libmei::AttTyped*>(&meiElement);
-
-    IF_ASSERT_FAILED(ornamAccidAtt && placementRelStaffAtt && typedAtt) {
-        return ornamSt;
-    }
-
-    // @accidlower
-    if (ornamAccidAtt->HasAccidlower()) {
-        bool accidWarning = false;
-        ornamSt.accidTypeBelow = Convert::accidFromMEI(ornamAccidAtt->GetAccidlower(), accidWarning);
-        warning = (warning || accidWarning);
-    }
-
-    // @accidupper
-    if (ornamAccidAtt->HasAccidupper()) {
-        bool accidWarning = false;
-        ornamSt.accidTypeAbove = Convert::accidFromMEI(ornamAccidAtt->GetAccidupper(), accidWarning);
-        warning = (warning || accidWarning);
-    }
-
-    // @place
-    if (placementRelStaffAtt->HasPlace()) {
-        bool placeWarning = false;
-        ornament->setAnchor(Convert::anchorFromMEI(placementRelStaffAtt->GetPlace(), placeWarning));
-        ornament->setPropertyFlags(engraving::Pid::ARTICULATION_ANCHOR, engraving::PropertyFlags::UNSTYLED);
-        warning = (warning || placeWarning);
-    }
-
-    // @type
-    if (typedAtt->HasType()) {
-        Convert::ornamintervaleFromMEI(ornament, typedAtt->GetType());
-    }
-
-    // @color
-    Convert::colorFromMEI(ornament, meiElement);
-
-    return ornamSt;
-}
-
-libmei::Ornam Convert::ornamToMEI(const engraving::Ornament* ornament)
-{
-    libmei::Ornam meiOrnam;
-
-    Convert::ornamToMEI(ornament, meiOrnam);
-
-    return meiOrnam;
-}
-
-void Convert::ornamToMEI(const engraving::Ornament* ornament, libmei::Element& meiElement)
-{
-    libmei::AttOrnamentAccid* ornamAccidAtt = dynamic_cast<libmei::AttOrnamentAccid*>(&meiElement);
-    libmei::AttPlacementRelStaff* placementRelStaffAtt = dynamic_cast<libmei::AttPlacementRelStaff*>(&meiElement);
-    libmei::AttTyped* typedAtt = dynamic_cast<libmei::AttTyped*>(&meiElement);
-
-    IF_ASSERT_FAILED(ornamAccidAtt && placementRelStaffAtt && typedAtt) {
-        return;
-    }
-
-    // @accidlower
-    if (ornament->accidentalBelow()) {
-        ornamAccidAtt->SetAccidlower(Convert::accidToMEI(ornament->accidentalBelow()->accidentalType()));
-    }
-
-    // @accidupper
-    if (ornament->accidentalAbove()) {
-        ornamAccidAtt->SetAccidupper(Convert::accidToMEI(ornament->accidentalAbove()->accidentalType()));
-    }
-
-    // @place
-    if (ornament->propertyFlags(engraving::Pid::ARTICULATION_ANCHOR) == engraving::PropertyFlags::UNSTYLED) {
-        placementRelStaffAtt->SetPlace(Convert::anchorToMEI(ornament->anchor()));
-    }
-
-    // @type
-    typedAtt->SetType(Convert::ornamintervalToMEI(ornament).toStdString());
-
-    // @color
-    Convert::colorToMEI(ornament, meiElement);
-}
-
-void Convert::ornamintervaleFromMEI(engraving::Ornament* ornament, const std::string& meiType)
-{
-    // @type
-    std::string value;
-
-    if (Convert::getTypeValueWithPrefix(meiType, INTERVAL_ABOVE, value)) {
-        engraving::OrnamentInterval interval = engraving::TConv::fromXml(String(value.c_str()).replace(u':',
-                                                                                                       u','),
-                                                                         engraving::DEFAULT_ORNAMENT_INTERVAL);
-        ornament->setIntervalAbove(interval);
-    }
-
-    if (Convert::getTypeValueWithPrefix(meiType, INTERVAL_BELOW, value)) {
-        engraving::OrnamentInterval interval = engraving::TConv::fromXml(String(value.c_str()).replace(u':',
-                                                                                                       u','),
-                                                                         engraving::DEFAULT_ORNAMENT_INTERVAL);
-        ornament->setIntervalBelow(interval);
-    }
-}
-
-String Convert::ornamintervalToMEI(const engraving::Ornament* ornament)
-{
-    // @type
-    StringList typeList;
-
-    if (ornament->hasIntervalAbove() && (ornament->intervalAbove().type != engraving::IntervalType::AUTO)) {
-        // Since a , is not valid in a type attribute, replace with :
-        String intervalStr = engraving::TConv::toXml(ornament->intervalAbove()).replace(u',', u':');
-        typeList << String("%1%2").arg(String(INTERVAL_ABOVE)).arg(intervalStr);
-    }
-
-    if (ornament->hasIntervalBelow() && (ornament->intervalBelow().type != engraving::IntervalType::AUTO)) {
-        String intervalStr = engraving::TConv::toXml(ornament->intervalBelow()).replace(u',', u':');
-        typeList << String("%1%2").arg(String(INTERVAL_BELOW)).arg(intervalStr);
-    }
-
-    return typeList.join(u" ");
-}
-
-Convert::PitchStruct Convert::pitchFromMEI(const libmei::Note& meiNote, const libmei::Accid& meiAccid,
-                                           const engraving::Interval& interval,
+Convert::PitchStruct Convert::pitchFromMEI(const libmei::Note& meiNote, const libmei::Accid& meiAccid, const engraving::Interval& interval,
                                            bool& warning)
 {
     // The mapping from pitch name to step
@@ -2184,9 +1774,6 @@ void Convert::slurFromMEI(engraving::SlurTie* slur, const libmei::Slur& meiSlur,
         slur->setStyleType(Convert::slurstyleFromMEI(meiSlur.GetLform(), typeWarning));
         warning = (warning || typeWarning);
     }
-
-    // @color
-    Convert::colorFromMEI(slur, meiSlur);
 }
 
 libmei::Slur Convert::slurToMEI(const engraving::SlurTie* slur)
@@ -2202,9 +1789,6 @@ libmei::Slur Convert::slurToMEI(const engraving::SlurTie* slur)
     if (slur->styleType() != engraving::SlurStyleType::Solid) {
         meiSlur.SetLform(Convert::slurstyleToMEI(slur->styleType()));
     }
-
-    // @color
-    Convert::colorToMEI(slur, meiSlur);
 
     return meiSlur;
 }
@@ -2596,7 +2180,6 @@ void Convert::tieFromMEI(engraving::SlurTie* tie, const libmei::Tie& meiTie, boo
     libmei::Slur meiSlur;
     meiSlur.SetCurvedir(meiTie.GetCurvedir());
     meiSlur.SetLform(meiTie.GetLform());
-    meiSlur.SetColor(meiTie.GetColor());
     Convert::slurFromMEI(tie, meiSlur, warning);
 }
 
@@ -2606,52 +2189,7 @@ libmei::Tie Convert::tieToMEI(const engraving::SlurTie* tie)
     libmei::Tie meiTie;
     meiTie.SetCurvedir(meiSlur.GetCurvedir());
     meiTie.SetLform(meiSlur.GetLform());
-    meiTie.SetColor(meiSlur.GetColor());
     return meiTie;
-}
-
-Convert::OrnamStruct Convert::trillFromMEI(engraving::Ornament* ornament, const libmei::Trill& meiTrill, bool& warning)
-{
-    // @glyhp.name
-    bool smufl = (meiTrill.HasGlyphAuth() && (meiTrill.GetGlyphAuth() == SMUFL_AUTH));
-
-    engraving::SymId symId = engraving::SymId::ornamentTrill;
-
-    // We give @glyph.name (or @glyph.num) priority over @form and @long
-    if (smufl && meiTrill.HasGlyphName()) {
-        symId = engraving::SymNames::symIdByName(String(meiTrill.GetGlyphName().c_str()));
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    }
-    // This is for loading MEI files not written by MuseScore and that use @glyph.num instead of @glyph.name
-    else if (smufl && meiTrill.HasGlyphNum()) {
-        symId = engravingFonts()->fallbackFont()->fromCode(meiTrill.GetGlyphNum());
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    }
-
-    ornament->setSymId(symId);
-
-    // Other attributes
-    return Convert::ornamFromMEI(ornament, meiTrill, warning);
-}
-
-libmei::Trill Convert::trillToMEI(const engraving::Ornament* ornament)
-{
-    libmei::Trill meiTrill;
-
-    Convert::ornamToMEI(ornament, meiTrill);
-
-    // @glyph.name
-    if (ornament->symId() != engraving::SymId::ornamentTrill) {
-        AsciiStringView glyphName = engraving::SymNames::nameForSymId(ornament->symId());
-        meiTrill.SetGlyphName(glyphName.ascii());
-        meiTrill.SetGlyphAuth(SMUFL_AUTH);
-    }
-
-    return meiTrill;
 }
 
 void Convert::tupletFromMEI(engraving::Tuplet* tuplet, const libmei::Tuplet& meiTuplet, bool& warning)
@@ -2693,9 +2231,6 @@ void Convert::tupletFromMEI(engraving::Tuplet* tuplet, const libmei::Tuplet& mei
         tuplet->setPropertyFlags(engraving::Pid::DIRECTION, engraving::PropertyFlags::UNSTYLED);
     }
 
-    // @color
-    Convert::colorFromMEI(tuplet, meiTuplet);
-
     return;
 }
 
@@ -2726,70 +2261,7 @@ libmei::Tuplet Convert::tupletToMEI(const engraving::Tuplet* tuplet)
         meiTuplet.SetNumPlace(libmei::STAFFREL_basic_below);
     }
 
-    // @color
-    Convert::colorToMEI(tuplet, meiTuplet);
-
     return meiTuplet;
-}
-
-Convert::OrnamStruct Convert::turnFromMEI(engraving::Ornament* ornament, const libmei::Turn& meiTurn, bool& warning)
-{
-    // @glyhp.name
-    bool smufl = (meiTurn.HasGlyphAuth() && (meiTurn.GetGlyphAuth() == SMUFL_AUTH));
-
-    engraving::SymId symId = engraving::SymId::ornamentTurn;
-
-    // We give @glyph.name (or @glyph.num) priority over @form and @long
-    if (smufl && meiTurn.HasGlyphName()) {
-        symId = engraving::SymNames::symIdByName(String(meiTurn.GetGlyphName().c_str()));
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    }
-    // This is for loading MEI files not written by MuseScore and that use @glyph.num instead of @glyph.name
-    else if (smufl && meiTurn.HasGlyphNum()) {
-        symId = engravingFonts()->fallbackFont()->fromCode(meiTurn.GetGlyphNum());
-        if (symId == engraving::SymId::noSym) {
-            warning = true;
-        }
-    } else {
-        if (meiTurn.HasForm()) {
-            if (meiTurn.GetForm() == libmei::turnLog_FORM_lower) {
-                symId = engraving::SymId::ornamentTurnInverted;
-            }
-        }
-    }
-
-    ornament->setSymId(symId);
-
-    // Other attributes
-    return Convert::ornamFromMEI(ornament, meiTurn, warning);
-}
-
-libmei::Turn Convert::turnToMEI(const engraving::Ornament* ornament)
-{
-    libmei::Turn meiTurn;
-
-    Convert::ornamToMEI(ornament, meiTurn);
-
-    // @form
-    switch (ornament->symId()) {
-    case (engraving::SymId::ornamentTurn):
-    case (engraving::SymId::ornamentTurnSlash): meiTurn.SetForm(libmei::turnLog_FORM_upper);
-        break;
-    case (engraving::SymId::ornamentTurnInverted): meiTurn.SetForm(libmei::turnLog_FORM_lower);
-        break;
-    default: break;
-    }
-
-    // @glyph.name
-    if (ornament->symId() == engraving::SymId::ornamentTurnSlash) {
-        AsciiStringView glyphName = engraving::SymNames::nameForSymId(ornament->symId());
-        meiTurn.SetGlyphName(glyphName.ascii());
-        meiTurn.SetGlyphAuth(SMUFL_AUTH);
-    }
-
-    return meiTurn;
 }
 
 bool Convert::hasTypeValue(const std::string& typeStr, const std::string& value)
@@ -2800,22 +2272,6 @@ bool Convert::hasTypeValue(const std::string& typeStr, const std::string& value)
     while (std::getline(iss, token, ' ')) {
         if (token == value) {
             return true;  // value found
-        }
-    }
-
-    return false;
-}
-
-bool Convert::getTypeValueWithPrefix(const std::string& typeStr, const std::string& prefix, std::string& value)
-{
-    std::istringstream iss(typeStr);
-    std::list<std::string> values;
-
-    std::string token;
-    while (std::getline(iss, token, ' ')) {
-        if ((token.rfind(prefix, 0) == 0) && (prefix.size() < token.size())) {
-            value = token.erase(0, prefix.length());
-            return true;
         }
     }
 

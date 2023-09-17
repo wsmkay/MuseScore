@@ -29,7 +29,6 @@
 #include "types.h"
 
 namespace mu::engraving {
-class Note;
 class Factory;
 
 //---------------------------------------------------------
@@ -52,8 +51,6 @@ class Bend final : public EngravingItem
 
 public:
     Bend* clone() const override { return new Bend(*this); }
-
-    Note* note() const { return toNote(explicitParent()); }
 
     static const char* label[13];
 

@@ -127,47 +127,21 @@ void NotationModule::resolveImports()
 
     auto ir = ioc()->resolve<IInteractiveUriRegister>(moduleName());
     if (ir) {
-        ir->registerUri(Uri("musescore://notation/style"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<EditStyle>("EditStyle")));
+        ir->registerWidgetUri<EditStyle>(Uri("musescore://notation/style"));
+        ir->registerWidgetUri<PageSettings>(Uri("musescore://notation/pagesettings"));
+        ir->registerWidgetUri<MeasurePropertiesDialog>(Uri("musescore://notation/measureproperties"));
+        ir->registerWidgetUri<BreaksDialog>(Uri("musescore://notation/breaks"));
+        ir->registerWidgetUri<EditStaff>(Uri("musescore://notation/staffproperties"));
+        ir->registerWidgetUri<TransposeDialog>(Uri("musescore://notation/transpose"));
+        ir->registerWidgetUri<SelectNoteDialog>(Uri("musescore://notation/selectnote"));
+        ir->registerWidgetUri<SelectDialog>(Uri("musescore://notation/selectelement"));
+        ir->registerWidgetUri<TupletDialog>(Uri("musescore://notation/othertupletdialog"));
+        ir->registerWidgetUri<StaffTextPropertiesDialog>(Uri("musescore://notation/stafftextproperties"));
+        ir->registerWidgetUri<RealizeHarmonyDialog>(Uri("musescore://notation/realizechordsymbols"));
 
-        ir->registerUri(Uri("musescore://notation/pagesettings"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<PageSettings>("PageSettings")));
-
-        ir->registerUri(Uri("musescore://notation/measureproperties"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<MeasurePropertiesDialog>("MeasurePropertiesDialog")));
-
-        ir->registerUri(Uri("musescore://notation/breaks"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<BreaksDialog>("BreaksDialog")));
-
-        ir->registerUri(Uri("musescore://notation/staffproperties"),
-                        ContainerMeta(ContainerType::QWidgetDialog, EditStaff::metaTypeId()));
-
-        ir->registerUri(Uri("musescore://notation/transpose"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<TransposeDialog>("TransposeDialog")));
-
-        ir->registerUri(Uri("musescore://notation/selectnote"),
-                        ContainerMeta(ContainerType::QWidgetDialog, SelectNoteDialog::metaTypeId()));
-
-        ir->registerUri(Uri("musescore://notation/selectelement"),
-                        ContainerMeta(ContainerType::QWidgetDialog, SelectDialog::metaTypeId()));
-
-        ir->registerUri(Uri("musescore://notation/othertupletdialog"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<TupletDialog>("TupletDialog")));
-
-        ir->registerUri(Uri("musescore://notation/stafftextproperties"),
-                        ContainerMeta(ContainerType::QWidgetDialog, StaffTextPropertiesDialog::static_metaTypeId()));
-
-        ir->registerUri(Uri("musescore://notation/parts"),
-                        ContainerMeta(ContainerType::QmlDialog, "MuseScore/NotationScene/PartsDialog.qml"));
-
-        ir->registerUri(Uri("musescore://notation/selectmeasurescount"),
-                        ContainerMeta(ContainerType::QmlDialog, "MuseScore/NotationScene/SelectMeasuresCountDialog.qml"));
-
-        ir->registerUri(Uri("musescore://notation/editgridsize"),
-                        ContainerMeta(ContainerType::QmlDialog, "MuseScore/NotationScene/EditGridSizeDialog.qml"));
-
-        ir->registerUri(Uri("musescore://notation/realizechordsymbols"),
-                        ContainerMeta(ContainerType::QWidgetDialog, qRegisterMetaType<RealizeHarmonyDialog>("RealizeHarmonyDialog")));
+        ir->registerQmlUri(Uri("musescore://notation/parts"), "MuseScore/NotationScene/PartsDialog.qml");
+        ir->registerQmlUri(Uri("musescore://notation/selectmeasurescount"), "MuseScore/NotationScene/SelectMeasuresCountDialog.qml");
+        ir->registerQmlUri(Uri("musescore://notation/editgridsize"), "MuseScore/NotationScene/EditGridSizeDialog.qml");
     }
 }
 
@@ -204,12 +178,6 @@ void NotationModule::registerUiTypes()
     qmlRegisterType<NotesPageModel>("MuseScore.NotationScene", 1, 0, "NotesPageModel");
     qmlRegisterType<RestsPageModel>("MuseScore.NotationScene", 1, 0, "RestsPageModel");
     qmlRegisterType<BeamsPageModel>("MuseScore.NotationScene", 1, 0, "BeamsPageModel");
-
-    qRegisterMetaType<EditStyle>("EditStyle");
-    qRegisterMetaType<EditStaff>("EditStaff");
-    qRegisterMetaType<SelectNoteDialog>("SelectNoteDialog");
-    qRegisterMetaType<SelectDialog>("SelectDialog");
-    qRegisterMetaType<StaffTextPropertiesDialog>("StaffTextPropertiesDialog");
 
     qmlRegisterUncreatableType<NoteInputBarCustomiseItem>("MuseScore.NotationScene", 1, 0, "NoteInputBarCustomiseItem", "Cannot create");
 

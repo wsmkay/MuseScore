@@ -36,8 +36,6 @@
 #include "iengravingconfiguration.h"
 #include "rendering/iscorerenderer.h"
 
-#include "infrastructure/ld_access.h"
-
 #include "types/fraction.h"
 #include "types/symid.h"
 #include "types/types.h"
@@ -125,6 +123,13 @@ enum class KerningType
     NOT_SET,
 };
 
+//! NOTE Enum for detect layoutdata bad access errors
+enum class LD_ACCESS {
+    CHECK = 0,          // should be correct; assert if still not
+    BAD,                // known to be bad; don’t assert, we’ll fix it later
+    MAYBE_NOTINITED     // in this case it’s okay if we access it before it’s been inited
+};
+
 class EngravingItemList : public std::list<EngravingItem*>
 {
     OBJECT_ALLOCATOR(engraving, EngravingItemList)
@@ -158,7 +163,7 @@ public:
     void deleteLater();
 
     EngravingItem* parentItem(bool explicitParent = true) const;
-    EngravingItemList childrenItems(bool all = false) const;
+    EngravingItemList childrenItems() const;
 
     EngravingItem* findAncestor(ElementType t);
     const EngravingItem* findAncestor(ElementType t) const;
@@ -490,14 +495,10 @@ public:
 
         Autoplace autoplace;
 
-        virtual void reset()
+        void reset()
         {
             m_bbox.reset();
-            //! NOTE Temporary removed, have problems, need investigation
-            //m_pos.reset();
         }
-
-        bool isValid() const { return m_bbox.has_value(); }
 
         bool isSkipDraw() const { return m_isSkipDraw; }
         void setIsSkipDraw(bool val) { m_isSkipDraw = val; }
@@ -505,26 +506,31 @@ public:
         double mag() const { return m_mag; }
         void setMag(double val) { m_mag = val; }
 
-        bool isSetPos() const { return m_pos.has_value(); }
-        const PointF& pos(LD_ACCESS mode = LD_ACCESS::CHECK) const
-        {
-            //! NOTE Temporarily to mute a lot of messages
-            mode = (LD_ACCESS::CHECK == mode) ? LD_ACCESS::MAYBE_NOTINITED : mode;
-            return m_pos.value(mode);
-        }
-
+        void resetPos() { m_pos = PointF(); }
+        const PointF& pos() const { return m_pos; }
         void setPos(const PointF& p) { doSetPos(p.x(), p.y()); }
         void setPos(double x, double y) { doSetPos(x, y); }
-        void setPosX(double x) { doSetPos(x, pos(LD_ACCESS::MAYBE_NOTINITED).y()); }
-        void setPosY(double y) { doSetPos(pos(LD_ACCESS::MAYBE_NOTINITED).x(), y); }
-        void move(const PointF& p) { doSetPos(pos(LD_ACCESS::MAYBE_NOTINITED).x() + p.x(), pos(LD_ACCESS::MAYBE_NOTINITED).y() + p.y()); }
-        void moveX(double x) { doSetPos(pos(LD_ACCESS::MAYBE_NOTINITED).x() + x, pos(LD_ACCESS::MAYBE_NOTINITED).y()); }
-        void moveY(double y) { doSetPos(pos(LD_ACCESS::MAYBE_NOTINITED).x(), pos(LD_ACCESS::MAYBE_NOTINITED).y() + y); }
+        void setPosX(double x) { doSetPos(x, m_pos.y()); }
+        void setPosY(double y) { doSetPos(m_pos.x(), y); }
+        void move(const PointF& p) { doSetPos(m_pos.x() + p.x(), m_pos.y() + p.y()); }
+        void moveX(double x) { doSetPos(m_pos.x() + x, m_pos.y()); }
+        void moveY(double y) { doSetPos(m_pos.x(), m_pos.y() + y); }
 
-        bool isSetBbox() const { return m_bbox.has_value(); }
-        void clearBbox() { m_bbox.reset(); }
-        const RectF& bbox(LD_ACCESS mode = LD_ACCESS::CHECK) const { return m_bbox.value(mode); }
-        void setBbox(const mu::RectF& r) { m_bbox.set_value(r); }
+        void resetBbox() { m_bbox.reset(); }
+        const RectF& bbox(LD_ACCESS mode = LD_ACCESS::CHECK) const
+        {
+            if (!m_bbox.has_value()) {
+                if (mode == LD_ACCESS::CHECK) {
+                    LOGE() << "BAD ACCESS to bbox (not set)";
+                }
+                static const RectF _dummy;
+                return _dummy;
+            }
+
+            return m_bbox.value();
+        }
+
+        void setBbox(const mu::RectF& r) { m_bbox = std::make_optional<RectF>(r); }
         void setBbox(double x, double y, double w, double h) { mutBbox().setRect(x, y, w, h); }
         void addBbox(const mu::RectF& r) { mutBbox().unite(r); }
         void setHeight(double v) { mutBbox().setHeight(v); }
@@ -535,16 +541,22 @@ public:
     protected:
         inline void doSetPos(double x, double y)
         {
-            m_pos.mut_value().setX(x),
-            m_pos.mut_value().setY(y);
+            m_pos.setX(x),
+            m_pos.setY(y);
         }
 
-        mu::RectF& mutBbox() { return m_bbox.mut_value(); }
+        mu::RectF& mutBbox()
+        {
+            if (!m_bbox) {
+                m_bbox = std::make_optional<RectF>();
+            }
+            return m_bbox.value();
+        }
 
         bool m_isSkipDraw = false;
         double m_mag = 1.0;                     // standard magnification (derived value)
-        ld_field<PointF> m_pos = "pos";         // Reference position, relative to _parent, set by autoplace
-        ld_field<RectF> m_bbox = "bbox";        // Bounding box relative to _pos + _offset
+        PointF m_pos;                           // Reference position, relative to _parent, set by autoplace
+        std::optional<RectF> m_bbox;            // Bounding box relative to _pos + _offset
     };
 
     const LayoutData* layoutData() const;

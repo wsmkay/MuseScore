@@ -61,7 +61,7 @@
       </item>
       <item>
        <property name="text">
-        <string>Header &amp; footer</string>
+        <string>Header, footer</string>
        </property>
       </item>
       <item>
@@ -86,7 +86,7 @@
       </item>
       <item>
        <property name="text">
-        <string>Measures</string>
+        <string>Measure</string>
        </property>
       </item>
       <item>
@@ -126,7 +126,7 @@
       </item>
       <item>
        <property name="text">
-        <string>Slurs &amp; ties</string>
+        <string>Slurs/Ties</string>
        </property>
       </item>
       <item>
@@ -136,47 +136,47 @@
       </item>
       <item>
        <property name="text">
-        <string>Voltas</string>
+        <string>Volta</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Ottavas</string>
+        <string>Ottava</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Pedal lines</string>
+        <string>Pedal</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Trill lines</string>
+        <string>Trill</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Vibrato lines</string>
+        <string>Vibrato</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Bends</string>
+        <string>Bend</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Text lines</string>
+        <string>Text line</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>System text lines</string>
+        <string>System text line</string>
        </property>
       </item>
       <item>
        <property name="text">
-        <string>Articulations &amp; ornaments</string>
+        <string>Articulations, Ornaments</string>
        </property>
       </item>
       <item>
@@ -206,7 +206,7 @@
       </item>
       <item>
        <property name="text">
-        <string>Expression text</string>
+        <string>Expression</string>
        </property>
       </item>
       <item>
@@ -231,7 +231,7 @@
       </item>
       <item>
        <property name="text">
-        <string>Tablature</string>
+        <string>Tablature styles</string>
        </property>
       </item>
       <item>
@@ -2261,7 +2261,7 @@
             <item>
              <widget class="QGroupBox" name="showHeader">
               <property name="title">
-               <string>Header</string>
+               <string>Header text</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -2564,7 +2564,7 @@
             <item>
              <widget class="QGroupBox" name="showFooter">
               <property name="title">
-               <string>Footer</string>
+               <string>Footer text</string>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -3752,7 +3752,7 @@
         <item>
          <widget class="QGroupBox" name="groupBox_TABClef">
           <property name="title">
-           <string>Default TAB clef</string>
+           <string>Default TAB Clef</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_29">
            <item>
@@ -3991,7 +3991,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupbox_measure">
           <property name="title">
-           <string>Measures</string>
+           <string>Measure</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_99">
            <property name="leftMargin">
@@ -5924,7 +5924,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupBox_2">
           <property name="title">
-           <string>Measure repeats</string>
+           <string>Measure Repeats</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_52">
            <item row="3" column="0" colspan="2">
@@ -6666,7 +6666,7 @@ By default, they will be placed such as that their right end are at the same lev
                <item row="2" column="0" colspan="2">
                 <widget class="QGroupBox" name="groupBox_tuplets_horizontalDist">
                  <property name="title">
-                  <string>Horizontal distance from notes</string>
+                  <string>Horizontal Distance from Notes</string>
                  </property>
                  <layout class="QGridLayout" name="gridLayout_17">
                   <item row="1" column="1">
@@ -7046,7 +7046,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_slursTies">
           <property name="title">
-           <string>Slurs &amp;&amp; ties</string>
+           <string>Slurs/Ties</string>
           </property>
           <property name="flat">
            <bool>false</bool>
@@ -7630,7 +7630,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_volta">
           <property name="title">
-           <string>Voltas</string>
+           <string>Volta</string>
           </property>
           <layout class="QGridLayout" name="gridLayout0">
            <item row="0" column="2">
@@ -7944,7 +7944,7 @@ By default, they will be placed such as that their right end are at the same lev
            </size>
           </property>
           <property name="title">
-           <string>Ottavas</string>
+           <string>Ottava</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_12">
            <item row="8" column="0">
@@ -8379,7 +8379,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_pedalLine">
           <property name="title">
-           <string>Pedal lines</string>
+           <string>Pedal line</string>
           </property>
           <layout class="QGridLayout" name="gridLayout11">
            <item row="0" column="1">
@@ -8703,7 +8703,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_trillLine">
           <property name="title">
-           <string>Trill lines</string>
+           <string>Trill line</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_14">
            <item row="1" column="0">
@@ -8839,7 +8839,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_vibratoLine">
           <property name="title">
-           <string>Vibrato lines</string>
+           <string>Vibrato line</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_141">
            <item row="1" column="0">
@@ -8975,7 +8975,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupBox_bend">
           <property name="title">
-           <string>Bends</string>
+           <string>Bend</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_36">
            <item row="1" column="3">
@@ -9104,7 +9104,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_textLine">
           <property name="title">
-           <string>Text lines</string>
+           <string>Text line</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_18">
            <item row="2" column="0">
@@ -9252,7 +9252,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_systemTextLine">
           <property name="title">
-           <string>System text lines</string>
+           <string>System text line</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_461">
            <item row="2" column="0">
@@ -9403,7 +9403,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_articulationsOrnaments">
           <property name="title">
-           <string>Articulations &amp;&amp; ornaments</string>
+           <string>Articulations, ornaments</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_9">
            <item row="3" column="2">
@@ -10862,7 +10862,7 @@ By default, they will be placed such as that their right end are at the same lev
             <item row="1" column="1">
              <widget class="QGroupBox" name="lyricsMelismaBox">
               <property name="title">
-               <string>Lyrics melisma</string>
+               <string>Lyrics eelisma</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_25">
                <item row="0" column="2">
@@ -11250,7 +11250,7 @@ By default, they will be placed such as that their right end are at the same lev
         <item>
          <widget class="QGroupBox" name="groupBox_expression">
           <property name="title">
-           <string>Expression text</string>
+           <string>Expression</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_62">
            <item row="0" column="0">
@@ -11930,7 +11930,7 @@ By default, they will be placed such as that their right end are at the same lev
                   <item row="4" column="0" colspan="6">
                    <widget class="QGroupBox" name="automaticCapitalization">
                     <property name="title">
-                     <string>Automatic capitalization</string>
+                     <string>Automatic Capitalization</string>
                     </property>
                     <property name="checkable">
                      <bool>true</bool>

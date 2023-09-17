@@ -370,71 +370,8 @@ void SingleLayout::layout(Ambitus* item, const Context& ctx)
 
 void SingleLayout::layout(Arpeggio* item, const Context& ctx)
 {
-    Arpeggio::LayoutData* ldata = item->mutLayoutData();
-
-    auto symbolLine = [](const std::shared_ptr<const IEngravingFont>& f, Arpeggio::LayoutData* data, SymId end, SymId fill)
-    {
-        data->symbols.clear();
-
-        double w = data->bottom - data->top;
-        double w1 = f->advance(end, data->magS);
-        double w2 = f->advance(fill, data->magS);
-        int n = lrint((w - w1) / w2);
-        for (int i = 0; i < n; ++i) {
-            data->symbols.push_back(fill);
-        }
-        data->symbols.push_back(end);
-    };
-
-    ldata->arpeggioHeight = item->spatium() * 4;
-    ldata->top = 0.0;
-    ldata->bottom = ldata->arpeggioHeight;
-
-    ldata->setMag(item->staff() ? item->staff()->staffMag(item->tick()) : item->mag());
-    ldata->magS = ldata->mag() * (ctx.style().spatium() / SPATIUM20);
-
-    std::shared_ptr<const IEngravingFont> font = ctx.engravingFont();
-    switch (item->arpeggioType()) {
-    case ArpeggioType::NORMAL: {
-        symbolLine(font, ldata, SymId::wiggleArpeggiatoUp, SymId::wiggleArpeggiatoUp);
-        // string is rotated -90 degrees
-        ldata->symsBBox = font->bbox(ldata->symbols, ldata->magS);
-        ldata->setBbox(RectF(0.0, -ldata->symsBBox.x() + ldata->top, ldata->symsBBox.height(), ldata->symsBBox.width()));
-    } break;
-
-    case ArpeggioType::UP: {
-        symbolLine(font, ldata, SymId::wiggleArpeggiatoUpArrow, SymId::wiggleArpeggiatoUp);
-        // string is rotated -90 degrees
-        ldata->symsBBox = font->bbox(ldata->symbols, ldata->magS);
-        ldata->setBbox(RectF(0.0, -ldata->symsBBox.x() + ldata->top, ldata->symsBBox.height(), ldata->symsBBox.width()));
-    } break;
-
-    case ArpeggioType::DOWN: {
-        symbolLine(font, ldata, SymId::wiggleArpeggiatoUpArrow, SymId::wiggleArpeggiatoUp);
-        // string is rotated +90 degrees (so that UpArrow turns into a DownArrow)
-        ldata->symsBBox = font->bbox(ldata->symbols, ldata->magS);
-        ldata->setBbox(RectF(0.0, ldata->symsBBox.x() + ldata->top, ldata->symsBBox.height(), ldata->symsBBox.width()));
-    } break;
-
-    case ArpeggioType::UP_STRAIGHT: {
-        double x1 = item->spatium() * 0.5;
-        ldata->symsBBox = font->bbox(SymId::arrowheadBlackUp, ldata->magS);
-        double w = ldata->symsBBox.width();
-        ldata->setBbox(RectF(x1 - w * 0.5, ldata->top, w, ldata->bottom));
-    } break;
-
-    case ArpeggioType::DOWN_STRAIGHT: {
-        double x1 = item->spatium() * 0.5;
-        ldata->symsBBox = font->bbox(SymId::arrowheadBlackDown, ldata->magS);
-        double w = ldata->symsBBox.width();
-        ldata->setBbox(RectF(x1 - w * 0.5, ldata->top, w, ldata->bottom));
-    } break;
-
-    case ArpeggioType::BRACKET: {
-        double w  = ctx.style().styleS(Sid::ArpeggioHookLen).val() * item->spatium();
-        ldata->setBbox(RectF(0.0, ldata->top, w, ldata->bottom));
-    } break;
-    }
+    LayoutContext tctx(ctx.dontUseScore());
+    ArpeggioLayout::layout(item, tctx, item->mutLayoutData());
 }
 
 void SingleLayout::layout(Articulation* item, const Context&)
@@ -461,7 +398,7 @@ void SingleLayout::layout(BagpipeEmbellishment* item, const Context& ctx)
 
     const BagpipeNoteList nl = item->resolveNoteList();
 
-    ldata->clearBbox();
+    ldata->resetBbox();
     ldata->isDrawBeam = nl.size() > 1;
     ldata->isDrawFlag = nl.size() == 1;
     ldata->spatium = spatium;
@@ -675,21 +612,17 @@ void SingleLayout::layout(Bend* item, const Context&)
 void SingleLayout::layout(Bracket* item, const Context& ctx)
 {
     Bracket::LayoutData* ldata = item->mutLayoutData();
-
-    ldata->setBracketHeight(3.5 * item->spatium() * 2);
-
     Shape shape;
 
     switch (item->bracketType()) {
     case BracketType::BRACE: {
         if (item->braceSymbol() == SymId::noSym) {
-            ldata->braceSymbol = SymId::brace;
+            item->setBraceSymbol(SymId::brace);
         }
-        double h = ldata->bracketHeight();
-        double w = item->symWidth(ldata->braceSymbol) * item->magx();
-        ldata->setBbox(RectF(0, 0, w, h));
-        ldata->shape.add(ldata->bbox());
-        ldata->setBracketWidth(w + ctx.style().styleMM(Sid::akkoladeBarDistance));
+        double h = item->h2() * 2;
+        double w = item->symWidth(item->braceSymbol()) * item->magx();
+        ldata->setBbox(0, 0, w, h);
+        shape.add(item->layoutData()->bbox());
     }
     break;
     case BracketType::NORMAL: {
@@ -706,8 +639,6 @@ void SingleLayout::layout(Bracket* item, const Context& ctx)
         double y = -item->symHeight(SymId::bracketTop) - bd;
         double h = (-y + item->h2()) * 2;
         ldata->setBbox(x, y, w, h);
-
-        ldata->setBracketWidth(ctx.style().styleMM(Sid::bracketWidth) + ctx.style().styleMM(Sid::bracketDistance));
     }
     break;
     case BracketType::SQUARE: {
@@ -718,8 +649,6 @@ void SingleLayout::layout(Bracket* item, const Context& ctx)
         w += (0.5 * item->spatium() + 3 * w);
         ldata->setBbox(x, y, w, h);
         shape.add(item->layoutData()->bbox());
-
-        ldata->setBracketWidth(ctx.style().styleMM(Sid::staffLineWidth) / 2 + 0.5 * item->spatium());
     }
     break;
     case BracketType::LINE: {
@@ -731,8 +660,6 @@ void SingleLayout::layout(Bracket* item, const Context& ctx)
         double h = (-y + item->h2()) * 2;
         ldata->setBbox(x, y, w, h);
         shape.add(item->layoutData()->bbox());
-
-        ldata->setBracketWidth(0.67 * ctx.style().styleMM(Sid::bracketWidth) + ctx.style().styleMM(Sid::bracketDistance));
     }
     break;
     case BracketType::NO_BRACKET:
@@ -1671,7 +1598,7 @@ void SingleLayout::layout(Text* item, const Context& ctx)
 
 void SingleLayout::layoutTextBase(const TextBase* item, const Context& ctx, TextBase::LayoutData* ldata)
 {
-    ldata->setPos(PointF());
+    ldata->resetPos();
     const_cast<TextBase*>(item)->setOffset(PointF());
 
     if (item->placeBelow()) {
@@ -1706,7 +1633,7 @@ void SingleLayout::layout1TextBase(const TextBase* item, const Context&, TextBas
     double yoff = 0;
     double h    = 0;
 
-    ldata->setPos(PointF());
+    ldata->resetPos();
 
     if (item->align() == AlignV::BOTTOM) {
         yoff += h - bb.bottom();

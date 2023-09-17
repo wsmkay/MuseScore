@@ -831,16 +831,16 @@ static int compareNotesPos(const Note* n1, const Note* n2)
 
 void Tie::calculateDirection()
 {
-    Chord* c1   = startNote()->chord();
-    Chord* c2   = endNote()->chord();
-    Measure* m1 = c1->measure();
-    Measure* m2 = c2->measure();
-
     if ((staffType() && staffType()->xmlName() == "stdJianpu")
         && (staffType() && staffType()->lines() == 0)) {
         m_up = true;
         return;
     }
+
+    Chord* c1   = startNote()->chord();
+    Chord* c2   = endNote()->chord();
+    Measure* m1 = c1->measure();
+    Measure* m2 = c2->measure();
 
     if (m_slurDirection == DirectionV::AUTO) {
         std::vector<Note*> notes = c1->notes();
