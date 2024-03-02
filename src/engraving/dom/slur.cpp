@@ -365,6 +365,15 @@ void Slur::slurPosChord(SlurTiePos* sp)
     sp->system2 = sp->system1;
     PointF pp(sp->system1->pagePos());
 
+    if (staffType() && staffType()->isJianpu()) {
+        double symHeight = staff()->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        setPos(x(), 0.0);
+        sp->p1.ry() = -symHeight;
+        sp->p2.ry() = sp->p1.ry() ? sp->p1.ry() : sp->p1.ry();
+
+        return;
+    }
+
     double xo;
     double yo;
 

@@ -282,6 +282,10 @@ bool Read410::readScore410(Score* score, XmlReader& e, ReadContext& ctx)
 
     for (Staff* staff : score->staves()) {
         staff->updateOttava();
+
+        if (staff->staffType() && staff->staffType()->isJianpu()) {
+            score->style().set(Sid::MusicalSymbolFont, String(u"jianpu"));
+        }
     }
     for (int idx : sysStaves) {
         score->addSystemObjectStaff(score->staff(idx));

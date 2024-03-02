@@ -743,7 +743,7 @@ void ChordLayout::layoutArticulations(Chord* item, LayoutContext& ctx)
     const StaffType* staffType = st->staffTypeForElement(item);
     double mag            = (staffType->isSmall() ? ctx.conf().styleD(Sid::smallStaffMag) : 1.0) * staffType->userMag();
     double _spatium       = ctx.conf().spatium() * mag;
-    double _lineDist       = _spatium * staffType->lineDistance().val() / 2;
+    double _lineDist       = (staffType && staffType->isJianpu()) ? 0.5 : _spatium * staffType->lineDistance().val() / 2;
     const double minDist = ctx.conf().styleMM(Sid::articulationMinDistance) * mag;
     const ArticulationStemSideAlign articulationHAlign = ctx.conf().styleV(Sid::articulationStemHAlign).value<ArticulationStemSideAlign>();
     const bool keepArticsTogether = ctx.conf().styleB(Sid::articulationKeepTogether);
@@ -1182,6 +1182,10 @@ void ChordLayout::layoutArticulations3(Chord* item, Slur* slur, LayoutContext& c
 //! May be called again when the chord is added to or removed from a beam.
 void ChordLayout::layoutStem(Chord* item, const LayoutContext& ctx)
 {
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        return;
+    }
+
     LAYOUT_CALL() << "chord: " << item->eid();
 
     // Stem needs to know hook's bbox and SMuFL anchors.
@@ -1446,6 +1450,11 @@ void ChordLayout::computeUp(const Chord* item, Chord::LayoutData* ldata, const L
     bool chordIsCrossStaff = item->staffMove() != 0;
     if (chordIsCrossStaff) {
         ldata->up = item->staffMove() > 0;
+        return;
+    }
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        ldata->up = false;
         return;
     }
 
@@ -2452,6 +2461,40 @@ void ChordLayout::layoutChords3(const MStyle& style, const std::vector<Chord*>& 
     int nAcc = 0;
     int prevSubtype = 0;
     int prevLine = std::numeric_limits<int>::min();
+
+    if (staff->staffType() && staff->staffType()->isJianpu()) {
+        for (int i = nNotes - 1; i >= 0; --i) {
+            Note* note = notes[i];
+            Accidental* ac = note->accidental();
+            if (ac) {
+                ac->setbbox(RectF());
+                ac->setPos(PointF());
+            }
+            Chord* chord = note->chord();
+
+            if (chord->shouldHaveHook()) {
+                chord->createHook();
+            } else {
+                ctx.mutDom().undoRemoveElement(chord->hook());
+            }
+
+            if (chord->hook()) {
+                chord->hook()->setPos(0.0, 0.0);
+            }
+
+            if (note) {
+                note->setPos(0.0, 0.0);
+            }
+
+            if (chord->dots()) {
+                double symWidth   = staff->symWidth(SymId::keysig_1_Jianpu);
+                chord->setDotPosX(symWidth / 2.0);
+                chord->setPos(0.0, 0.0);
+            }
+        }
+        placeDots(chords, notes);
+        return;
+    }
 
     for (int i = nNotes - 1; i >= 0; --i) {
         Note* note     = notes[i];

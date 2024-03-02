@@ -29,6 +29,7 @@
 
 #include "dom/mscore.h"
 
+#include "jianpu.h"
 #include "smufl.h"
 
 #include "log.h"
@@ -111,6 +112,20 @@ void EngravingFont::ensureLoad()
         }
         Sym& sym = m_symbols[id];
         computeMetrics(sym, code);
+    }
+
+    if (m_font.family() == "Jianpu") {
+        // qDebug() << "N" << m_font.family();
+        for (size_t id = 0; id < m_symbols.size(); ++id) {
+            Jianpu::Code code = Jianpu::code(static_cast<SymId>(id));
+            if (!code.isValid()) {
+                continue;
+            }
+            Sym& sym = m_symbols[id];
+            computeMetrics(sym, code);
+        }
+        m_loaded = true;
+        return;
     }
 
     File metadataFile(io::FileInfo(m_fontPath).path() + u"/metadata.json");
@@ -406,6 +421,26 @@ void EngravingFont::loadStylisticAlternates(const JsonObject& glyphsWithAlternat
                     computeMetrics(sym, code);
                 }
             }
+
+            if (m_font.family() == "Jianpu") {
+                if (!val.isNull()) {
+                    JsonObject symObj = val.toObject();
+                    Sym& sym = this->sym(glyph.alternateSymId);
+
+                    Jianpu::Code code;
+                    char32_t jianpuCode = symObj.value("codepoint").toString().mid(2).toUInt(&ok, 16);
+                    if (ok) {
+                        code.jianpuCode = jianpuCode;
+                    }
+                    char32_t musicSymBlockCode = symObj.value("alternateCodepoint").toString().mid(2).toUInt(&ok, 16);
+                    if (ok) {
+                        code.musicSymBlockCode = musicSymBlockCode;
+                    }
+                    if (code.jianpuCode || code.musicSymBlockCode) {
+                        computeMetrics(sym, code);
+                    }
+                }
+            }
         }
     }
 }
@@ -510,6 +545,20 @@ void EngravingFont::computeMetrics(EngravingFont::Sym& sym, const Smufl::Code& c
     }
 }
 
+void EngravingFont::computeMetrics(EngravingFont::Sym& sym, const Jianpu::Code& code)
+{
+    if (fontProvider()->inFontUcs4(m_font, code.jianpuCode)) {
+        sym.code = code.jianpuCode;
+    } else if (fontProvider()->inFontUcs4(m_font, code.musicSymBlockCode)) {
+        sym.code = code.musicSymBlockCode;
+    }
+
+    if (sym.code > 0) {
+        sym.bbox = fontProvider()->symBBox(m_font, sym.code, DPI_F);
+        sym.advance = fontProvider()->symAdvance(m_font, sym.code, DPI_F);
+    }
+}
+
 // =============================================
 // Symbol properties
 // =============================================
@@ -531,6 +580,9 @@ char32_t EngravingFont::symCode(SymId id) const
         return s.code;
     }
 
+    if (m_font.family() == "Jianpu") {
+        return Jianpu::jianpuCode(id);
+    }
     // fallback: search in the common SMuFL table
     return Smufl::smuflCode(id);
 }

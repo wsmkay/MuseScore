@@ -27,6 +27,7 @@
 #include "draw/ifontprovider.h"
 #include "draw/internal/ifontsdatabase.h"
 
+#include "infrastructure/jianpu.h"
 #include "infrastructure/smufl.h"
 #include "infrastructure/localfileinfoprovider.h"
 
@@ -68,7 +69,7 @@ static void engraving_init_qrc()
     Q_INIT_RESOURCE(fonts_FreeSans);
     Q_INIT_RESOURCE(fonts_FreeSerif);
     Q_INIT_RESOURCE(fonts_Gootville);
-    Q_INIT_RESOURCE(fonts_Leland);
+    Q_INIT_RESOURCE(fonts_Jianpu);
     Q_INIT_RESOURCE(fonts_MScore);
     Q_INIT_RESOURCE(fonts_MuseJazz);
     Q_INIT_RESOURCE(fonts_Smufl);
@@ -135,6 +136,7 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
     {
         // Symbols
         Smufl::init();
+        Jianpu::init();
 
         m_engravingfonts->addFont("Leland",     "Leland",      ":/fonts/leland/Leland.otf");
         m_engravingfonts->addFont("Bravura",    "Bravura",     ":/fonts/bravura/Bravura.otf");
@@ -144,8 +146,13 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
         m_engravingfonts->addFont("Petaluma",   "Petaluma",    ":/fonts/petaluma/Petaluma.otf");
         m_engravingfonts->addFont("Finale Maestro", "Finale Maestro", ":/fonts/finalemaestro/FinaleMaestro.otf");
         m_engravingfonts->addFont("Finale Broadway", "Finale Broadway", ":/fonts/finalebroadway/FinaleBroadway.otf");
+        m_engravingfonts->addFont("Jianpu", "Jianpu", ":/fonts/jianpu/Jianpu.otf");
 
-        m_engravingfonts->setFallbackFont("Bravura");
+        if (m_engravingfonts->fontByName("Jianpu")) {
+            m_engravingfonts->setFallbackFont("Jianpu");
+        } else {
+            m_engravingfonts->setFallbackFont("Bravura");
+        }
 
         //! NOTE It may be necessary to draw something with these fonts without requesting the fonts themselves
         //! (for example, simply specifying the family name for painter).
@@ -177,6 +184,7 @@ void EngravingModule::onInit(const IApplication::RunMode& mode)
             ":/fonts/petaluma/PetalumaScript.otf",
             ":/fonts/finalemaestro/FinaleMaestroText.otf",
             ":/fonts/finalebroadway/FinaleBroadwayText.otf",
+            ":/fonts/jianpu/Jianpu.otf",
         };
 
         std::shared_ptr<IFontProvider> fontProvider = ioc()->resolve<IFontProvider>("fonts");

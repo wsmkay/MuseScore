@@ -31,6 +31,7 @@ set(MODULE_BIG_QRC
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_FreeSans.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_FreeSerif.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_Gootville.qrc
+    ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_Jianpu.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_Leland.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_MScore.qrc
     ${CMAKE_CURRENT_LIST_DIR}/data/fonts/fonts_MuseJazz.qrc
@@ -68,6 +69,8 @@ set(MODULE_SRC
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/htmlparser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/htmlparser.h
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/ifileinfoprovider.h
+    ${CMAKE_CURRENT_LIST_DIR}/infrastructure/jianpu.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/infrastructure/jianpu.h
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/localfileinfoprovider.cpp
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/localfileinfoprovider.h
     ${CMAKE_CURRENT_LIST_DIR}/infrastructure/smufl.cpp

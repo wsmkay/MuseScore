@@ -167,7 +167,7 @@ struct TablatureDurationFont {
 // keep in sync with the _presets initialization in StaffType::initStaffTypes() and _defaultPreset
 
 enum class StaffTypes : signed char {
-    STANDARD,
+    STANDARD, JIANPU,
     PERC_1LINE, PERC_2LINE, PERC_3LINE, PERC_5LINE,
     TAB_6SIMPLE, TAB_6COMMON, TAB_6FULL,
     TAB_4SIMPLE, TAB_4COMMON, TAB_4FULL,
@@ -348,6 +348,8 @@ public:
     double   chordStemPosX(const Chord*) const { return STAFFTYPE_TAB_DEFAULTSTEMPOSX; }
     mu::PointF chordStemPosBeam(const Chord*) const;
     double   chordStemLength(const Chord*) const;
+
+    bool isJianpu() const { return (name() == "Jianpu" && lines() == 0) || (xmlName() == "stdJianpu" && lines() == 0); }
 
     bool isTabStaff() const { return m_group == StaffGroup::TAB; }
     bool isDrumStaff() const { return m_group == StaffGroup::PERCUSSION; }

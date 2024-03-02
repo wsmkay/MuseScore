@@ -2042,7 +2042,14 @@ void Note::setDotRelativeLine(int dotMove)
             return;
         }
     }
-    y *= spatium() * staff()->lineDistance(tick());
+
+    if (staffType() && staffType()->isJianpu()) {
+        double symWidth = staff()->symWidth(SymId::keysig_1_Jianpu);
+        y = 0.0;
+        y += symWidth / 3.0;
+    } else {
+        y *= spatium() * staff()->lineDistance(tick());
+    }
 
     // apply to dots
 

@@ -245,6 +245,11 @@ static int compareNotesPos(const Note* n1, const Note* n2)
 
 void Tie::calculateDirection()
 {
+    if (staffType() && staffType()->isJianpu()) {
+        m_up = true;
+        return;
+    }
+
     Chord* c1   = startNote()->chord();
     Chord* c2   = endNote()->chord();
     Measure* m1 = c1->measure();

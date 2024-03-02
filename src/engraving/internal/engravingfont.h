@@ -32,6 +32,7 @@
 
 #include "io/path.h"
 
+#include "infrastructure/jianpu.h"
 #include "infrastructure/smufl.h"
 #include "infrastructure/shape.h"
 
@@ -123,6 +124,7 @@ private:
     void loadStylisticAlternates(const JsonObject& glyphsWithAlternatesObject);
     void loadEngravingDefaults(const JsonObject& engravingDefaultsObject);
     void computeMetrics(Sym& sym, const Smufl::Code& code);
+    void computeMetrics(Sym& sym, const Jianpu::Code& code);
 
     void constructShapeWithCutouts(Shape& shape, SymId id);
 

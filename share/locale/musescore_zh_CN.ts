@@ -11549,6 +11549,11 @@ Published under the &lt;a href=&quot;%1&quot;&gt;GNU General Public License vers
         <translation>五线鼓谱</translation>
     </message>
     <message>
+        <location filename="../../src/engraving/libmscore/stafftype.cpp" line="1197"/>
+        <source>Jianpu</source>
+        <translation>简谱</translation>
+    </message>
+    <message>
         <location filename="../../src/engraving/dom/stafftype.cpp" line="1199"/>
         <source>Tab. 6-str. simple</source>
         <translation>6弦简易指法谱</translation>
@@ -14086,6 +14091,11 @@ Fret %1 on strings %2</source>
         <location filename="../../src/engraving/types/typesconv.cpp" line="677"/>
         <source>F clef (19th century)</source>
         <translation>F谱号（19世纪）</translation>
+    </message>
+    <message>
+        <location filename="../../src/engraving/types/typesconv.cpp" line="678"/>
+        <source>Jianpu</source>
+        <translation>简谱</translation>
     </message>
     <message>
         <location filename="../../src/engraving/types/typesconv.cpp" line="679"/>

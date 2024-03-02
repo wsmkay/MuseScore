@@ -540,6 +540,7 @@ enum class ClefType : signed char {
     F_C,
     F_F18C,
     F_19C,
+    JIANPU,
     PERC,
     PERC2,
     TAB,

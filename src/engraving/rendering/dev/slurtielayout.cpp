@@ -205,6 +205,15 @@ void SlurTieLayout::layout(Slur* item, LayoutContext& ctx)
             break;
         }
     }
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        item->setUp(true);
+        double symHeight = item->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        item->setPos(0.0, 0.0);
+        sPos.p1.ry() = -symHeight;
+        sPos.p2.ry() = sPos.p1.ry() ? sPos.p1.ry() : sPos.p1.ry();
+    }
+
     item->setbbox(item->spannerSegments().empty() ? RectF() : item->frontSegment()->ldata()->bbox());
 }
 
@@ -262,6 +271,18 @@ SpannerSegment* SlurTieLayout::layoutSystem(Slur* item, System* system, LayoutCo
     // adjust for ties
     p1 = sPos.p1;
     p2 = sPos.p2;
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        double symHeight = item->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        item->setPos(0.0, 0.0);
+        p1.ry() = -symHeight;
+        p2.ry() = p1.ry() ? p1.ry() : p1.ry();
+
+        layoutSegment(slurSegment, ctx, p1, p2);
+
+        return slurSegment;
+    }
+
     bool constrainLeftAnchor = false;
 
     // start anchor, either on the start chordrest or at the beginning of the system
@@ -517,6 +538,18 @@ void SlurTieLayout::slurPos(Slur* item, SlurTiePos* sp, LayoutContext& ctx)
 
     sp->p1 = scr->pos() + scr->segment()->pos() + scr->measure()->pos();
     sp->p2 = ecr->pos() + ecr->segment()->pos() + ecr->measure()->pos();
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        double symWidth = item->symWidth(SymId::keysig_1_Jianpu) * 0.4;
+        double symHeight = item->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        item->setPos(0.0, 0.0);
+        sp->p1.rx() += symWidth;
+        sp->p2.rx() += symWidth;
+        sp->p1.ry() = -symHeight;
+        sp->p2.ry() = sp->p1.ry() ? sp->p1.ry() : sp->p1.ry();
+
+        return;
+    }
 
     // adjust for cross-staff
     if (scr->vStaffIdx() != item->vStaffIdx() && sp->system1) {
@@ -985,6 +1018,15 @@ void SlurTieLayout::adjustEndPoints(SlurSegment* slurSeg)
     const double staffLineMargin = 0.175 + (0.5 * slurSeg->style().styleS(Sid::staffLineWidth).val() * (spatium / lw));
     PointF p1 = slurSeg->ups(Grip::START).p;
     PointF p2 = slurSeg->ups(Grip::END).p;
+
+    if (slurSeg->staffType() && slurSeg->staffType()->isJianpu()) {
+        double symHeight = slurSeg->staff()->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        slurSeg->setPos(0.0, 0.0);
+        p1.ry() = -symHeight;
+        p2.ry() = p1.ry() ? p1.ry() : p1.ry();
+
+        return;
+    }
 
     double y1sp = p1.y() / lw;
     double y2sp = p2.y() / lw;
@@ -1524,6 +1566,14 @@ TieSegment* SlurTieLayout::tieLayoutFor(Tie* item, System* system)
     }
 
     segment->addLineAttachPoints(); // add attach points to start and end note
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        double symHeight = item->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        item->setPos(0.0, 0.0);
+        sPos.p1.ry() = -symHeight;
+        sPos.p2.ry() = sPos.p1.ry() ? sPos.p1.ry() : sPos.p1.ry();
+    }
+
     return segment;
 }
 
@@ -1581,6 +1631,14 @@ TieSegment* SlurTieLayout::tieLayoutBack(Tie* item, System* system, LayoutContex
     }
 
     segment->addLineAttachPoints();
+
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        double symHeight = item->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        item->setPos(0.0, 0.0);
+        sPos.p1.ry() = -symHeight;
+        sPos.p2.ry() = sPos.p1.ry() ? sPos.p1.ry() : sPos.p1.ry();
+    }
+
     return segment;
 }
 
@@ -1898,6 +1956,15 @@ void SlurTieLayout::adjustY(TieSegment* tieSegment)
         computeBezier(tieSegment);
     }
 
+    if (staff->staffType() && staff->staffType()->isJianpu()) {//待处理
+        double symHeight = staff->symHeight(SymId::keysig_1_Jianpu) * 0.75;
+        if (tieSegment) {
+            tieSegment->ups(Grip::START).p.setY(-symHeight);
+            tieSegment->ups(Grip::END).p.setY(-symHeight);
+        }
+        return;
+    }
+
     // 2. Check for bad arc protrusion
 
     RectF tieSegmentBBox = tieSegment->ldata()->bbox();
@@ -2069,6 +2136,11 @@ void SlurTieLayout::resolveVerticalTieCollisions(const std::vector<TieSegment*>&
 
 void SlurTieLayout::computeUp(Slur* slur, LayoutContext& ctx)
 {
+    if (slur->staffType() && slur->staffType()->isJianpu()) {
+        slur->setUp(true);
+        return;
+    }
+
     switch (slur->slurDirection()) {
     case DirectionV::UP:
         slur->setUp(true);

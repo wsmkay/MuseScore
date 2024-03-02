@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+    <file alias="fonts/jianpu/Jianpu.otf">../../../../fonts/jianpu/Jianpu.otf</file>
+    <file alias="fonts/jianpu/jianpuGlyphnames.json">../../../../fonts/jianpu/jianpuGlyphnames.json</file>
+    </qresource>
+</RCC>

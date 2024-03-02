@@ -3877,6 +3877,25 @@ void TLayout::layoutKeySig(const KeySig* item, KeySig::LayoutData* ldata, const 
     }
 
     // compute bbox
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        double symWidth = item->symWidth(SymId::keysig_1_Jianpu);
+        double x = symWidth * 3.5;
+
+        if (t1 == 0) {
+            KeySym ks;
+            ks.sym = SymId::accidentalNatural;
+            ks.xPos = 0;
+            ldata->keySymbols.push_back(ks);
+        }
+
+        if (!ldata->keySymbols.empty()) {
+            const KeySym& ks = ldata->keySymbols.back();
+            ldata->addBbox(item->symBbox(ks.sym).translated(x, 0));
+        }
+
+        return;
+    }
+
     for (const KeySym& ks : ldata->keySymbols) {
         double x = ks.xPos * spatium;
         double y = ks.line * step;
@@ -4781,6 +4800,11 @@ void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Layout
         ChordLayout::fillShape(item, ldata, ctx.conf());
     }
 
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        ldata->setPos(0.0, 0.0);
+        ldata->setBbox(item->symBbox(ldata->sym));
+    }
+
     auto layoutRestDots = [](const Rest* item, const LayoutConfiguration& conf, Rest::LayoutData* ldata)
     {
         const_cast<Rest*>(item)->checkDots();
@@ -4792,6 +4816,17 @@ void TLayout::layoutRest(const Rest* item, Rest::LayoutData* ldata, const Layout
             TLayout::layoutNoteDot(dot, dotldata);
             dotldata->setPos(x, y);
             x += dx;
+        }
+
+        if (item->staffType() && item->staffType()->isJianpu()) {
+            double symHeight   = item->symHeight(SymId::keysig_1_Jianpu);
+            for (NoteDot* dot : item->dotList()) {
+                NoteDot::LayoutData* dotldata = dot->mutldata();
+                TLayout::layoutNoteDot(dot, dotldata);
+                dotldata->setPos(x, symHeight / 5.2);
+                x += dx;
+            }
+            return;
         }
     };
 
@@ -5173,6 +5208,10 @@ void TLayout::layoutStaffTypeChange(const StaffTypeChange* item, StaffTypeChange
 
 void TLayout::layoutStem(const Stem* item, Stem::LayoutData* ldata, const LayoutConfiguration& conf)
 {
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        return;
+    }
+
     LAYOUT_CALL_ITEM(item);
 
     const bool up = item->up();
@@ -5245,6 +5284,10 @@ void TLayout::layoutStem(const Stem* item, Stem::LayoutData* ldata, const Layout
 
 void TLayout::layoutStemSlash(const StemSlash* item, StemSlash::LayoutData* ldata, const LayoutConfiguration& conf)
 {
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        return;
+    }
+
     LAYOUT_CALL_ITEM(item);
     IF_ASSERT_FAILED(item->explicitParent()) {
         return;

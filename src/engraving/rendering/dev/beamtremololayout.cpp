@@ -225,6 +225,10 @@ void BeamTremoloLayout::offsetBeamWithAnchorShortening(const BeamBase::LayoutDat
 
 void BeamTremoloLayout::extendStem(const BeamBase::LayoutData* ldata, Chord* chord, double addition)
 {
+    if (chord->staffType() && chord->staffType()->isJianpu()) {
+        return;
+    }
+
     LayoutContext ctx(chord->score());
 
     PointF anchor = chordBeamAnchor(ldata, chord, ChordBeamAnchorType::Middle);
@@ -879,6 +883,10 @@ int BeamTremoloLayout::computeDesiredSlant(const BeamBase* item, const BeamBase:
                                            int middleLine, int dictator,
                                            int pointer)
 {
+    if (item->staffType() && item->staffType()->isJianpu()) {
+        return 0;
+    }
+
     if (item->isType(ElementType::BEAM) && item_cast<const Beam*>(item)->noSlope()) {
         return 0;
     }
@@ -1040,6 +1048,11 @@ double BeamTremoloLayout::chordBeamAnchorX(const BeamBase::LayoutData* ldata, co
     double pagePosX = ldata->trem ? ldata->trem->pagePos().x() : ldata->beam->pagePos().x();
     double stemPosX = cr->stemPosX() + cr->pagePos().x() - pagePosX;
 
+    if (cr->staffType() && cr->staffType()->isJianpu()) {
+        double symWidth = cr->symWidth(SymId::keysig_1_Jianpu);
+        return cr->pagePos().x() - pagePosX + symWidth / 5.0 * 2.15;
+    }
+
     if (!cr->isChord() || !toChord(cr)->stem()) {
         if (!ldata->up) {
             // rests always return the right side of the glyph as their stemPosX
@@ -1087,11 +1100,17 @@ double BeamTremoloLayout::chordBeamAnchorX(const BeamBase::LayoutData* ldata, co
 
 double BeamTremoloLayout::chordBeamAnchorY(const BeamBase::LayoutData* ldata, const ChordRest* cr)
 {
+    const Chord* chord = toChord(cr);
+    if (cr->staffType() && cr->staffType()->isJianpu()) {
+        Note* note = chord->downNote();
+        PointF position = note->pagePos();
+        return position.y() - 0.000001;//待处理
+    }
+
     if (!cr->isChord()) {
         return cr->pagePos().y();
     }
 
-    const Chord* chord = toChord(cr);
     Note* note = cr->up() ? chord->downNote() : chord->upNote();
     PointF position = note->pagePos();
 

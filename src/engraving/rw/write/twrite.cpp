@@ -1834,10 +1834,12 @@ void TWrite::write(const Instrument* item, XmlWriter& xml, WriteContext&, const 
         ClefTypeList ct = item->clefType(i);
         if (ct.concertClef == ct.transposingClef) {
             if (ct.concertClef != ClefType::G) {
-                if (i) {
-                    xml.tag("clef", { { "staff", i + 1 } }, TConv::toXml(ct.concertClef));
-                } else {
-                    xml.tag("clef", TConv::toXml(ct.concertClef));
+                if (ct.concertClef != ClefType::JIANPU) {
+                    if (i) {
+                        xml.tag("clef", { { "staff", i + 1 } }, TConv::toXml(ct.concertClef));
+                    } else {
+                        xml.tag("clef", TConv::toXml(ct.concertClef));
+                    }
                 }
             }
         } else {
@@ -2548,7 +2550,9 @@ void TWrite::write(const Staff* item, XmlWriter& xml, WriteContext& ctx)
     ClefTypeList ct = item->defaultClefType();
     if (ct.concertClef == ct.transposingClef) {
         if (ct.concertClef != ClefType::G) {
-            xml.tag("defaultClef", TConv::toXml(ct.concertClef));
+            if ((ct.concertClef != ClefType::JIANPU) && (item->staffType() && !item->staffType()->isJianpu())) {
+                xml.tag("defaultClef", TConv::toXml(ct.concertClef));
+            }
         }
     } else {
         xml.tag("defaultConcertClef", TConv::toXml(ct.concertClef));
@@ -2680,10 +2684,14 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext&)
         xml.tag("name", item->xmlName());
     }
     if (item->lines() != 5) {
-        xml.tag("lines", item->lines());
+        if (!item->isJianpu()) {
+            xml.tag("lines", item->lines());
+        }
     }
     if (item->lineDistance().val() != 1.0) {
-        xml.tag("lineDistance", item->lineDistance().val());
+        if (!item->isJianpu()) {
+            xml.tag("lineDistance", item->lineDistance().val());
+        }
     }
     if (item->yoffset().val() != 0.0) {
         xml.tag("yoffset", item->yoffset().val());
@@ -2698,7 +2706,9 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext&)
         xml.tag("stepOffset", item->stepOffset());
     }
     if (!item->genClef()) {
-        xml.tag("clef", item->genClef());
+        if (!item->isJianpu()) {
+            xml.tag("clef", item->genClef());
+        }
     }
     if (item->stemless()) {
         xml.tag("slashStyle", item->stemless());     // for backwards compatibility
@@ -2724,7 +2734,9 @@ void TWrite::write(const StaffType* item, XmlWriter& xml, WriteContext&)
             xml.tag("keysig", item->genKeysig());
         }
         if (!item->showLedgerLines()) {
-            xml.tag("ledgerlines", item->showLedgerLines());
+            if (!item->isJianpu()) {
+                xml.tag("ledgerlines", item->showLedgerLines());
+            }
         }
     } else {
         xml.tag("durations",        item->genDurations());
